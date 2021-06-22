@@ -38,6 +38,7 @@ PUB Main{}
                                                 '   sensor power
     repeat
         ser.position(0, 3)
+        repeat until press.pressdataready{}
         ser.hex(press.pressdata, 6)
 
 PUB Setup{}

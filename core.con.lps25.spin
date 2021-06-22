@@ -70,7 +70,18 @@ CON
     INTERRUPT_CFG       = $24
     INT_SOURCE          = $25
 ' RESERVED $26
+
     STATUS_REG          = $27
+    STATUS_REG_MASK     = $33
+        P_OR            = 5
+        T_OR            = 4
+        P_DA            = 1
+        T_DA            = 0
+        POVR            = 1 << P_OR
+        TOVR            = 1 << T_OR
+        PDRDY           = 1 << P_DA
+        TDRDY           = 1
+
     PRESS_OUT_XL        = $28
     PRESS_OUT_L         = $29
     PRESS_OUT_H         = $2A

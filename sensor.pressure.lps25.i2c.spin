@@ -109,6 +109,11 @@ PUB PressDataRate(rate): curr_rate
     rate := ((curr_rate & core#ODR_MASK) | rate)
     writereg(core#CTRL_REG1, 1, @rate)
 
+PUB PressDataReady{}: flag
+' Flag indicating pressure data ready
+    readreg(core#STATUS_REG, 1, @flag)
+    return ((flag & core#PDRDY) <> 0)
+
 PUB Reset{} | tmp
 ' Reset the device
     tmp := core#RESET
