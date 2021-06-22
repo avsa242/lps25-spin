@@ -62,6 +62,26 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB Powered(state): curr_state
+' Enable sensor power
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#CTRL_REG1, 1, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ||(state) << core#PD
+        other:
+            return ((curr_state >> core#PD) & 1) == 1
+
+    state := ((curr_state & core#PD_MASK) | state)
+    writereg(core#CTRL_REG1, 1, @state)
+
+PUB PressData{}: press_adc
+' Read pressure data
+'   Returns: s24
+    readreg(core#PRESS_OUT_XL, 3, @press_adc)
+
 PUB Reset{}
 ' Reset the device
 

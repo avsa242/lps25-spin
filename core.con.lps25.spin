@@ -13,42 +13,57 @@
 CON
 
 ' I2C Configuration
-    I2C_MAX_FREQ    = 400_000                   ' device max I2C bus freq
-    SLAVE_ADDR      = $5D << 1                  ' 7-bit format slave address
-    T_POR           = 1_000                     ' startup time (usecs)
+    I2C_MAX_FREQ        = 400_000                   ' device max I2C bus freq
+    SLAVE_ADDR          = $5D << 1                  ' 7-bit format slave address
+    T_POR               = 1_000                     ' startup time (usecs)
 
-    DEVID_RESP      = $BD                       ' device ID expected response
+    DEVID_RESP          = $BD                       ' device ID expected response
 
 ' Register definitions
 ' RESERVED $00..$07
-    REF_P_XL        = $08
-    REF_P_L         = $09
-    REF_P_H         = $0A
+    REF_P_XL            = $08
+    REF_P_L             = $09
+    REF_P_H             = $0A
 ' RESERVED $0D..$0E
-    WHO_AM_I        = $0F
-    RES_CONF        = $10
+    WHO_AM_I            = $0F
+    RES_CONF            = $10
 ' RESERVED $11..$1F
-    CTRL_REG1       = $20
-    CTRL_REG2       = $21
-    CTRL_REG3       = $22
-    CTRL_REG4       = $23
-    INTERRUPT_CFG   = $24
-    INT_SOURCE      = $25
+    CTRL_REG1           = $20
+    CTRL_REG1_MASK      = $FF
+        PD              = 7
+        ODR             = 4
+        DIFF_EN         = 3
+        BDU             = 2
+        RESET_AZ        = 1
+        SIM             = 0
+        ODR_BITS        = %111
+        PD_MASK         = (1 << PD) ^ CTRL_REG1_MASK
+        ODR_MASK        = (ODR_BITS << ODR) ^ CTRL_REG1_MASK
+        DIFF_EN_MASK    = (1 << DIFF_EN) ^ CTRL_REG1_MASK
+        BDU_MASK        = (1 << BDU) ^ CTRL_REG1_MASK
+        RESET_AZ_MASK   = (1 << RESET_AZ) ^ CTRL_REG1_MASK
+        SIM_MASK        = 1 ^ CTRL_REG1_MASK
+
+    CTRL_REG2           = $21
+    CTRL_REG3           = $22
+    CTRL_REG4           = $23
+    INTERRUPT_CFG       = $24
+    INT_SOURCE          = $25
 ' RESERVED $26
-    STATUS_REG      = $27
-    PRESS_OUT_XL    = $28
-    PRESS_OUT_L     = $29
-    PRESS_OUT_H     = $2A
-    TEMP_OUT_L      = $2B
-    TEMP_OUT_H      = $2C
+    STATUS_REG          = $27
+    PRESS_OUT_XL        = $28
+    PRESS_OUT_L         = $29
+    PRESS_OUT_H         = $2A
+    TEMP_OUT_L          = $2B
+    TEMP_OUT_H          = $2C
 ' RESERVED $2D
-    FIFO_CTRL       = $2E
-    FIFO_STATUS     = $2F
-    THS_P_L         = $30
-    THS_P_H         = $31
+    FIFO_CTRL           = $2E
+    FIFO_STATUS         = $2F
+    THS_P_L             = $30
+    THS_P_H             = $31
 ' RESERVED $32..$38
-    RPDS_L          = $39
-    RPDS_H          = $3A
+    RPDS_L              = $39
+    RPDS_H              = $3A
 
 PUB Null{}
 ' This is not a top-level object

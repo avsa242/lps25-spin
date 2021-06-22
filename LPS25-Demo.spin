@@ -34,8 +34,11 @@ OBJ
 PUB Main{}
 
     setup{}
-    ser.hex(press.deviceid, 2)
+    press.powered(true)
+    ser.dec(press.powered(-2))
     repeat
+        ser.position(0, 3)
+        ser.hex(press.pressdata, 6)
 
 PUB Setup{}
 
