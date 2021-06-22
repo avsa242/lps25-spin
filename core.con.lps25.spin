@@ -16,6 +16,7 @@ CON
     I2C_MAX_FREQ        = 400_000                   ' device max I2C bus freq
     SLAVE_ADDR          = $5D << 1                  ' 7-bit format slave address
     T_POR               = 1_000                     ' startup time (usecs)
+    MB_I2C              = 1 << 7
 
     DEVID_RESP          = $BD                       ' device ID expected response
 

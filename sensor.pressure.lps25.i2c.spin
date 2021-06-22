@@ -82,40 +82,63 @@ PUB PressData{}: press_adc
 '   Returns: s24
     readreg(core#PRESS_OUT_XL, 3, @press_adc)
 
+PUB PressDataRate(rate): curr_rate
+' Set pressure output data rate, in Hz
+'   Valid values: 0, 1, 7, 12 (12.5), 25
+'   Any other value polls the chip and returns the current setting
+    curr_rate := 0
+    readreg(core#CTRL_REG1, 1, @curr_rate)
+    case rate
+        0, 1, 7, 12, 25:
+            rate := lookdownz(rate: 0, 1, 7, 12, 25) << core#ODR
+        other:
+            curr_rate := (curr_rate >> core#ODR) & core#ODR_BITS
+            return lookupz(curr_rate: 0, 1, 7, 12, 25)
+
+    rate := ((curr_rate & core#ODR_MASK) | rate)
+    writereg(core#CTRL_REG1, 1, @rate)
+
 PUB Reset{}
 ' Reset the device
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff
     case reg_nr                                 ' validate register num
-        $08..$0A, $0F, $10, $20..$31, $39..$3A:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg_nr
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 2)
-            i2c.start{}
-            i2c.wr_byte(SLAVE_RD)
-
-    ' read LSByte to MSByte
-            i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
-            i2c.stop{}
+        core#REF_P_XL, core#PRESS_OUT_XL, core#TEMP_OUT_L, core#THS_P_L, {
+}       core#RPDS_L:
+            reg_nr |= core#MB_I2C               ' set multi-byte r/w bit
+        $0F, $10, $20..$27, $2E..$2F:
         other:                                  ' invalid reg_nr
             return
+
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 2)
+    i2c.start{}
+    i2c.wr_byte(SLAVE_RD)
+
+    ' read LSByte to MSByte
+    i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
+    i2c.stop{}
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write nr_bytes to the device from ptr_buff
     case reg_nr
-        $08..$0A, $10, $20..$24, $2E, $30, $31, $39, $3A:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg_nr
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 2)
+        core#REF_P_XL, core#THS_P_L, core#RPDS_L:
+            reg_nr |= core#MB_I2C               ' set multi-byte r/w bit
+        $10, $20..$24, $2E:
+        other:                                  ' invalid reg_nr
+            return
+
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 2)
 
     ' write LSByte to MSByte
-            i2c.wrblock_lsbf(ptr_buff, nr_bytes)
-            i2c.stop{}
-        other:
-            return
+    i2c.wrblock_lsbf(ptr_buff, nr_bytes)
+    i2c.stop{}
 
 DAT
 {

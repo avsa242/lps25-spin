@@ -36,6 +36,7 @@ PUB Main{}
     setup{}
     press.powered(true)
     ser.dec(press.powered(-2))
+    press.pressdatarate(25)
     repeat
         ser.position(0, 3)
         ser.hex(press.pressdata, 6)
