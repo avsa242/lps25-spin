@@ -46,6 +46,25 @@ CON
         SIM_MASK        = 1 ^ CTRL_REG1_MASK
 
     CTRL_REG2           = $21
+    CTRL_REG2_MASK      = $FF
+        BOOT            = 7
+        FIFO_EN         = 6
+        STOP_ON_FTH     = 5
+        FIFO_MEAN_DEC   = 4
+        I2C_DIS         = 3
+        SWRESET         = 2
+        AUTO_ZERO       = 1
+        ONE_SHOT        = 0
+        BOOT_MASK       = (1 << BOOT) ^ CTRL_REG2_MASK
+        FIFO_EN_MASK    = (1 << FIFO_EN) ^ CTRL_REG2_MASK
+        STOP_ON_FTH_MASK= (1 << STOP_ON_FTH) ^ CTRL_REG2_MASK
+        FFO_MN_DEC_MASK = (1 << FIFO_MEAN_DEC) ^ CTRL_REG2_MASK
+        I2C_DIS_MASK    = (1 << I2C_DIS) ^ CTRL_REG2_MASK
+        SWRESET_MASK    = (1 << SWRESET) ^ CTRL_REG2_MASK
+        AUTO_ZERO_MASK  = (1 << AUTO_ZERO) ^ CTRL_REG2_MASK
+        ONE_SHOT_MASK   = 1 ^ CTRL_REG2_MASK
+        RESET           = 1 << SWRESET
+
     CTRL_REG3           = $22
     CTRL_REG4           = $23
     INTERRUPT_CFG       = $24

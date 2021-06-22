@@ -57,12 +57,14 @@ PUB Stop{}
 
 PUB Defaults{}
 ' Set factory defaults
+    reset{}
 
 PUB Preset_Active{}
 ' Like factory defaults, but
 '   * Enable sensor power
 '   * Set data rate to 25Hz
 '   * Enable block data updates (private)
+    reset{}
     powered(true)
     blockdataupdate(true)
     pressdatarate(25)
@@ -107,8 +109,10 @@ PUB PressDataRate(rate): curr_rate
     rate := ((curr_rate & core#ODR_MASK) | rate)
     writereg(core#CTRL_REG1, 1, @rate)
 
-PUB Reset{}
+PUB Reset{} | tmp
 ' Reset the device
+    tmp := core#RESET
+    writereg(core#CTRL_REG2, 1, @tmp)
 
 PRI blockDataUpdate(state): curr_state
 ' Enable block data updates - don't update output data until
