@@ -58,6 +58,15 @@ PUB Stop{}
 PUB Defaults{}
 ' Set factory defaults
 
+PUB Preset_Active{}
+' Like factory defaults, but
+'   * Enable sensor power
+'   * Set data rate to 25Hz
+'   * Enable block data updates (private)
+    powered(true)
+    blockdataupdate(true)
+    pressdatarate(25)
+
 PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
@@ -100,6 +109,22 @@ PUB PressDataRate(rate): curr_rate
 
 PUB Reset{}
 ' Reset the device
+
+PRI blockDataUpdate(state): curr_state
+' Enable block data updates - don't update output data until
+'   H (MSB), L (MB) and XL (LSB) updated
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#CTRL_REG1, 1, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ||(state) << core#BDU
+        other:
+            return ((curr_state >> core#BDU) & 1) == 1
+
+    state := ((curr_state & core#BDU_MASK) | state)
+    writereg(core#CTRL_REG1, 1, @state)
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff

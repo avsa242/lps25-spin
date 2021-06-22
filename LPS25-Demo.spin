@@ -34,9 +34,8 @@ OBJ
 PUB Main{}
 
     setup{}
-    press.powered(true)
-    ser.dec(press.powered(-2))
-    press.pressdatarate(25)
+    press.preset_active{}                       ' set defaults, but enable
+                                                '   sensor power
     repeat
         ser.position(0, 3)
         ser.hex(press.pressdata, 6)
