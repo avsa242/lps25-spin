@@ -20,8 +20,13 @@ CON
     DEF_HZ            = 100_000
     I2C_MAX_FREQ      = core#I2C_MAX_FREQ
 
+' Temperature scales
+    C               = 0
+    F               = 1
+
 VAR
 
+    byte _temp_scale
 
 OBJ
 
@@ -128,6 +133,44 @@ PUB Reset{} | tmp
     tmp := core#RESET
     writereg(core#CTRL_REG2, 1, @tmp)
 
+PUB TempData{}: temp_adc
+' Read temperature data
+'   Returns: s16
+    readreg(core#TEMP_OUT_L, 2, @temp_adc)
+    return ~~temp_adc
+
+PUB TempDataOverrun{}: flag
+' Flag indicating temperature data has overrun
+    readreg(core#STATUS_REG, 1, @flag)
+    return ((flag & core#TOVR) <> 0)
+
+PUB TempDataReady{}: flag
+' Flag indicating temperature data ready
+    readreg(core#STATUS_REG, 1, @flag)
+    return ((flag & core#TDRDY) <> 0)
+
+PUB Temperature{}: temp
+' Current temperature, in hundredths of a degree
+'   Returns: Integer
+'   (e.g., 2105 is equivalent to 21.05 deg C)
+    temp := calctemp(tempdata{})
+    case _temp_scale
+        C:
+        F:
+            return ((temp * 9_00) / 5_00) + 32_00
+
+PUB TempScale(scale): curr_scale
+' Set temperature scale used by Temperature method
+'   Valid values:
+'      *C (0): Celsius
+'       F (1): Fahrenheit
+'   Any other value returns the current setting
+    case scale
+        C, F:
+            _temp_scale := scale
+        other:
+            return _temp_scale
+
 PRI blockDataUpdate(state): curr_state
 ' Enable block data updates - don't update output data until
 '   H (MSB), L (MB) and XL (LSB) updated
@@ -143,6 +186,10 @@ PRI blockDataUpdate(state): curr_state
 
     state := ((curr_state & core#BDU_MASK) | state)
     writereg(core#CTRL_REG1, 1, @state)
+
+PRI calcTemp(temp_word): temp_c | whole, part
+' Calculate temperature in degrees Celsius, given ADC word
+    return ((temp_word * 100) / 480) + 42_50
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff

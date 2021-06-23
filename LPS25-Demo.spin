@@ -24,6 +24,8 @@ CON
     I2C_HZ      = 400_000
 ' --
 
+    C           = 0
+    F           = 1
     DAT_X_COL   = 25
 
 OBJ
@@ -39,9 +41,12 @@ PUB Main{}
     setup{}
     press.preset_active{}                       ' set defaults, but enable
                                                 '   sensor power
+    press.tempscale(C)                          ' C, F
+
     repeat
         ser.position(0, 3)
         presscalc{}
+        tempcalc{}
 
 PUB PressCalc{}
 
@@ -49,6 +54,15 @@ PUB PressCalc{}
     ser.str(string("Barometric pressure (Pa):"))
     ser.positionx(DAT_X_COL)
     decimal(press.presspascals{}, 10)
+    ser.clearline{}
+    ser.newline{}
+
+PUB TempCalc{}
+
+    repeat until press.tempdataready{}
+    ser.str(string("Temperature: "))
+    ser.positionx(DAT_X_COL)
+    decimal(press.temperature, 100)
     ser.clearline{}
     ser.newline{}
 
