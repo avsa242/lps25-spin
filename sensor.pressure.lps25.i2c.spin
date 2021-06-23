@@ -119,6 +119,10 @@ PUB PressDataReady{}: flag
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#PDRDY) <> 0)
 
+PUB PressPascals{}: press_p
+' Read pressure data, in tenths of a Pascal
+    return ((pressdata{} * 100) / 4096) * 10
+
 PUB Reset{} | tmp
 ' Reset the device
     tmp := core#RESET

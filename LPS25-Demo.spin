@@ -24,11 +24,14 @@ CON
     I2C_HZ      = 400_000
 ' --
 
+    DAT_X_COL   = 25
+
 OBJ
 
     cfg   : "core.con.boardcfg.flip"
     ser   : "com.serial.terminal.ansi"
     time  : "time"
+    int   : "string.integer"
     press : "sensor.pressure.lps25.i2c"
 
 PUB Main{}
@@ -38,8 +41,43 @@ PUB Main{}
                                                 '   sensor power
     repeat
         ser.position(0, 3)
-        repeat until press.pressdataready{}
-        ser.hex(press.pressdata, 6)
+        presscalc{}
+
+PUB PressCalc{}
+
+    repeat until press.pressdataready{}
+    ser.str(string("Barometric pressure (Pa):"))
+    ser.positionx(DAT_X_COL)
+    decimal(press.presspascals{}, 10)
+    ser.clearline{}
+    ser.newline{}
+
+PRI Decimal(scaled, divisor) | whole[4], part[4], places, tmp, sign
+' Display a scaled up number as a decimal
+'   Scale it back down by divisor (e.g., 10, 100, 1000, etc)
+    whole := scaled / divisor
+    tmp := divisor
+    places := 0
+    part := 0
+    sign := 0
+    if scaled < 0
+        sign := "-"
+    else
+        sign := " "
+
+    repeat
+        tmp /= 10
+        places++
+    until tmp == 1
+    scaled //= divisor
+    part := int.deczeroed(||(scaled), places)
+
+    ser.char(sign)
+    ser.dec(||(whole))
+    ser.char(".")
+    ser.str(part)
+    ser.chars(" ", 5)
+
 
 PUB Setup{}
 
