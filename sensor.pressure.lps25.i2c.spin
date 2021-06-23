@@ -93,6 +93,11 @@ PUB PressData{}: press_adc
 '   Returns: s24
     readreg(core#PRESS_OUT_XL, 3, @press_adc)
 
+PUB PressDataOverrun{}: flag
+' Flag indicating pressure data has overrun
+    readreg(core#STATUS_REG, 1, @flag)
+    return ((flag & core#POVR) <> 0)
+
 PUB PressDataRate(rate): curr_rate
 ' Set pressure output data rate, in Hz
 '   Valid values: 0, 1, 7, 12 (12.5), 25
