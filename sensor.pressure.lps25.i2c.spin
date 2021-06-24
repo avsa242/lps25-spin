@@ -187,6 +187,22 @@ PUB Temperature{}: temp
         F:
             return ((temp * 9_00) / 5_00) + 32_00
 
+PUB TempOSR(ratio): curr_ratio
+' Set temperature output data oversampling ratio
+'   Valid values: 8, 16, 32, 64
+'   Any other value polls the chip and returns the current setting
+    curr_ratio := 0
+    readreg(core#RES_CONF, 1, @curr_ratio)
+    case ratio
+        8, 16, 32, 64:
+            ratio := lookdownz(ratio: 8, 16, 32, 64) << core#AVGT
+        other:
+            curr_ratio := (curr_ratio >> core#AVGT) & core#AVGT_BITS
+            return lookupz(curr_ratio: 8, 16, 32, 64)
+
+    ratio := ((curr_ratio & core#AVGT_MASK) | ratio)
+    writereg(core#RES_CONF, 1, @ratio)
+
 PUB TempScale(scale): curr_scale
 ' Set temperature scale used by Temperature method
 '   Valid values:
