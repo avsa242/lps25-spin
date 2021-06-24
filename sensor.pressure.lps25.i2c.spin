@@ -136,6 +136,22 @@ PUB PressDataReady{}: flag
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#PDRDY) <> 0)
 
+PUB PressOSR(ratio): curr_ratio
+' Set pressure output data oversampling ratio
+'   Valid values: 8, 32, 128, 512
+'   Any other value polls the chip and returns the current setting
+    curr_ratio := 0
+    readreg(core#RES_CONF, 1, @curr_ratio)
+    case ratio
+        8, 32, 128, 512:
+            ratio := lookdownz(ratio: 8, 32, 128, 512)
+        other:
+            curr_ratio &= core#AVGP_BITS
+            return lookupz(curr_ratio: 8, 32, 128, 512)
+
+    ratio := ((curr_ratio & core#AVGP_MASK) | ratio)
+    writereg(core#RES_CONF, 1, @ratio)
+
 PUB PressPascals{}: press_p
 ' Read pressure data, in tenths of a Pascal
     return ((pressdata{} * 100) / 4096) * 10

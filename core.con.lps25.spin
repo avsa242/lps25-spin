@@ -5,7 +5,7 @@
     Description: LPS25-specific low-level constants
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 22, 2021
+    Updated Jun 24, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -27,7 +27,16 @@ CON
     REF_P_H             = $0A
 ' RESERVED $0D..$0E
     WHO_AM_I            = $0F
+
     RES_CONF            = $10
+    RES_CONF_MASK       = $0F
+        AVGT            = 2
+        AVGP            = 0
+        AVGT_BITS       = %11
+        AVGP_BITS       = %11
+        AVGT_MASK       = (AVGT_BITS << AVGT) ^ RES_CONF_MASK
+        AVGP_MASK       = AVGP_BITS ^ RES_CONF_MASK
+
 ' RESERVED $11..$1F
     CTRL_REG1           = $20
     CTRL_REG1_MASK      = $FF
