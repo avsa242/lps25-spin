@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 22, 2021
+    Updated Jun 24, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -92,6 +92,18 @@ PUB Powered(state): curr_state
 
     state := ((curr_state & core#PD_MASK) | state)
     writereg(core#CTRL_REG1, 1, @state)
+
+PUB PressBias(offs): curr_offs
+' Set pressure bias/offset
+'   Valid values: -32768..32767
+'   Any other value polls the chip and returns the current setting
+    case offs
+        -32768..32767:
+            writereg(core#RPDS_L, 2, @offs)
+        other:
+            curr_offs := 0
+            readreg(core#RPDS_L, 2, @curr_offs)
+            return
 
 PUB PressData{}: press_adc
 ' Read pressure data
