@@ -5,7 +5,7 @@
     Description: LPS25-specific low-level constants
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 24, 2021
+    Updated Jun 25, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -73,6 +73,7 @@ CON
         AUTO_ZERO_MASK  = (1 << AUTO_ZERO) ^ CTRL_REG2_MASK
         ONE_SHOT_MASK   = 1 ^ CTRL_REG2_MASK
         RESET           = 1 << SWRESET
+        MEASURE         = 1
 
     CTRL_REG3           = $22
     CTRL_REG4           = $23

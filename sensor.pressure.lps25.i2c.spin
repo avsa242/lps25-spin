@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 24, 2021
+    Updated Jun 25, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -19,6 +19,10 @@ CON
     DEF_SDA           = 29
     DEF_HZ            = 100_000
     I2C_MAX_FREQ      = core#I2C_MAX_FREQ
+
+' Operating modes
+    SINGLE          = 0
+    CONT            = 1
 
 ' Temperature scales
     C               = 0
@@ -78,6 +82,25 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB Measure{} | tmp
+' Perform measurement
+    tmp := core#MEASURE
+    writereg(core#CTRL_REG2, 1, @tmp)
+
+PUB OpMode(mode): curr_mode
+' Set operating mode
+'   Valid values:
+'       SINGLE (0): Single-shot/standby
+'       CONT (1): Continuous measurement
+'   NOTE: CONT sets output data rate to 1Hz
+    case mode
+        SINGLE:
+            pressdatarate(0)
+        CONT:
+            pressdatarate(1)
+        other:
+            return ||(pressdatarate(-2) <> 0)
+
 PUB Powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
@@ -119,6 +142,7 @@ PUB PressDataRate(rate): curr_rate
 ' Set pressure output data rate, in Hz
 '   Valid values: 0, 1, 7, 12 (12.5), 25
 '   Any other value polls the chip and returns the current setting
+'   NOTE: A value of 0 is equivalent to setting OpMode(SINGLE)
     curr_rate := 0
     readreg(core#CTRL_REG1, 1, @curr_rate)
     case rate
