@@ -179,6 +179,19 @@ PUB PressDataReady{}: flag
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#PDRDY) <> 0)
 
+PUB PressIntThresh(thresh): curr_thr
+' Set threshold for pressure interrupt source, in hPa
+'   Valid values: 0..1260
+'   Any other value polls the chip and returns the current setting
+    case thresh
+        0..1260:
+            thresh *= 16
+            writereg(core#THS_P_L, 2, @thresh)
+        other:
+            curr_thr := 0
+            readreg(core#THS_P_L, 2, @curr_thr)
+            return curr_thr / 16
+
 PUB PressOSR(ratio): curr_ratio
 ' Set pressure output data oversampling ratio
 '   Valid values: 8, 32, 128, 512
