@@ -76,6 +76,18 @@ CON
         MEASURE         = 1
 
     CTRL_REG3           = $22
+    CTRL_REG3_MASK      = $C3
+        INT_H_L         = 7
+        PP_OD           = 6
+        INT_S2          = 1
+        INT_S1          = 0
+        INT_H_L_MASK    = (1 << INT_H_L) ^ CTRL_REG3_MASK
+        PP_OD_MASK      = (1 << PP_OD) ^ CTRL_REG3_MASK
+        INT_S_BITS      = %11
+        INT_S2_MASK     = (1 << INT_S2) ^ CTRL_REG3_MASK
+        INT_S1_MASK     = 1 ^ CTRL_REG3_MASK
+        INT_S_MASK      = INT_S_BITS ^ CTRL_REG3_MASK
+
     CTRL_REG4           = $23
     INTERRUPT_CFG       = $24
     INT_SOURCE          = $25

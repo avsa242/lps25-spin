@@ -82,6 +82,22 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB IntMask(mask): curr_mask
+' Set interrupt mask
+'   Bits: 1..0
+'       1: pressure low
+'       0: pressure high
+'   Any other value polls the chip and returns the current setting
+    curr_mask := 0
+    readreg(core#CTRL_REG3, 1, @curr_mask)
+    case mask
+        %00..%11:
+        other:
+            return curr_mask & core#INT_S_BITS
+
+    mask := ((curr_mask & core#INT_S_MASK) | mask)
+    writereg(core#CTRL_REG3, 1, @mask)
+
 PUB Measure{} | tmp
 ' Perform measurement
     tmp := core#MEASURE
@@ -92,6 +108,9 @@ PUB OpMode(mode): curr_mode
 '   Valid values:
 '       SINGLE (0): Single-shot/standby
 '       CONT (1): Continuous measurement
+'   Any other value polls the chip and returns the current setting
+'   NOTE: If PressDataRate() is set to _any_ non-zero value, this method will
+'       return '1' for the current setting
 '   NOTE: CONT sets output data rate to 1Hz
     case mode
         SINGLE:
