@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jul 23, 2021
+    Updated Jun 25, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -27,6 +27,10 @@ CON
 ' Temperature scales
     C               = 0
     F               = 1
+
+' Interrupt INT pin output modes
+    PP              = 0                         ' push-pull
+    OD              = 1                         ' open-drain
 
 VAR
 
@@ -82,6 +86,23 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB IntActiveState(state): curr_state
+' Set interrupt active state/polarity
+'   Valid values:
+'       0: active low
+'       1: active high
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#CTRL_REG3, 1, @curr_state)
+    case state
+        0, 1:
+            state <<= core#INT_H_L
+        other:
+            return ((curr_state >> core#INT_H_L) & 1)
+
+    state := ((curr_state & core#INT_H_L_MASK) | state)
+    writereg(core#CTRL_REG3, 1, @state)
+
 PUB Interrupt{}: mask
 ' Read interrupt state
 '   Returns: bitmask (2..0)
@@ -106,6 +127,54 @@ PUB IntMask(mask): curr_mask
 
     mask := ((curr_mask & core#PE_MASK) | mask)
     writereg(core#INTERRUPT_CFG, 1, @mask)
+
+PUB IntMode(mode): curr_mode
+' Set interrupt pin output mode
+'   Valid values:
+'       PP (0): Push-pull
+'       OD (1): Open-drain
+'   Any other value polls the chip and returns the current setting
+    curr_mode := 0
+    readreg(core#CTRL_REG3, 1, @curr_mode)
+    case mode
+        PP, OD:
+            mode <<= core#PP_OD
+        other:
+            return ((curr_mode >> core#PP_OD) & 1)
+
+    mode := ((curr_mode & core#PP_OD_MASK) | mode)
+    writereg(core#CTRL_REG3, 1, @mode)
+
+PUB IntsEnabled(state): curr_state
+' Enable interrupt generation
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#CTRL_REG1, 1, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ||(state) << core#DIFF_EN
+        other:
+            return (((curr_state >> core#DIFF_EN) & 1) == 1)
+
+    state := ((curr_state & core#DIFF_EN_MASK) | state)
+    writereg(core#CTRL_REG1, 1, @state)
+
+PUB IntsLatched(state): curr_state
+' Latch interrupts
+'   Valid values:
+'       FALSE (0): interrupt clears when condition is no longer met
+'       TRUE (-1, 1): interrupt clears only when state is read with Interrupt()
+    curr_state := 0
+    readreg(core#INTERRUPT_CFG, 1, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ||(state) << core#LIR
+        other:
+            return (((curr_state >> core#LIR) & 1) == 1)
+
+    state := ((curr_state & core#LIR_MASK) | state)
+    writereg(core#INTERRUPT_CFG, 1, @state)
 
 PUB Measure{} | tmp
 ' Perform measurement
