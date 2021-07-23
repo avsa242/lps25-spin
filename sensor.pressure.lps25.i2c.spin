@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 25, 2021
+    Updated Jul 23, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -82,6 +82,15 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB Interrupt{}: mask
+' Read interrupt state
+'   Returns: bitmask (2..0)
+'       2: interrupt active
+'       1: pressure low
+'       0: pressure high
+    mask := 0
+    readreg(core#INT_SOURCE, 1, @mask)
+
 PUB IntMask(mask): curr_mask
 ' Set interrupt mask
 '   Bits: 1..0
@@ -89,14 +98,14 @@ PUB IntMask(mask): curr_mask
 '       0: pressure high
 '   Any other value polls the chip and returns the current setting
     curr_mask := 0
-    readreg(core#CTRL_REG3, 1, @curr_mask)
+    readreg(core#INTERRUPT_CFG, 1, @curr_mask)
     case mask
         %00..%11:
         other:
-            return curr_mask & core#INT_S_BITS
+            return curr_mask & core#PE_BITS
 
-    mask := ((curr_mask & core#INT_S_MASK) | mask)
-    writereg(core#CTRL_REG3, 1, @mask)
+    mask := ((curr_mask & core#PE_MASK) | mask)
+    writereg(core#INTERRUPT_CFG, 1, @mask)
 
 PUB Measure{} | tmp
 ' Perform measurement

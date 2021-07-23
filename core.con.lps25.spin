@@ -5,7 +5,7 @@
     Description: LPS25-specific low-level constants
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 25, 2021
+    Updated Jul 23, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -89,8 +89,19 @@ CON
         INT_S_MASK      = INT_S_BITS ^ CTRL_REG3_MASK
 
     CTRL_REG4           = $23
+
     INTERRUPT_CFG       = $24
+    INTERRUPT_CFG_MASK  = $07
+        LIR             = 2
+        PL_E            = 1
+        PH_E            = 0
+        PE_BITS         = %11
+        LIR_MASK        = (1 << LIR) ^ INTERRUPT_CFG_MASK
+        PL_E_MASK       = (1 << PL_E) ^ INTERRUPT_CFG_MASK
+        PH_E_MASK       = 1 ^ INTERRUPT_CFG_MASK
+        PE_MASK         = PE_BITS ^ INTERRUPT_CFG_MASK
     INT_SOURCE          = $25
+
 ' RESERVED $26
 
     STATUS_REG          = $27
