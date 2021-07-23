@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jun 25, 2021
+    Updated Jul 23, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
