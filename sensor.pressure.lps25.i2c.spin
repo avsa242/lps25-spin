@@ -146,6 +146,22 @@ PUB FIFOMode(mode): curr_mode
     mode := ((curr_mode & core#F_MODE_MASK) | mode)
     writereg(core#FIFO_CTRL, 1, @mode)
 
+PUB FIFOUnreadSamples{}: nr_samples | isempty
+' Number of unread samples currently in FIFO
+'   Returns: 0..32
+    readreg(core#FIFO_STATUS, 1, @nr_samples)
+    isempty := (((nr_samples >> core#EMPTY_FIFO) & 1) == 1)
+    nr_samples &= core#FSS_BITS
+    ' a value of zero in the FSS field has a different meaning, depending on
+    '   the EMPTY_FIFO field:
+    if nr_samples == 0                          ' if FSS is 0:
+        if isempty                              '  if EMPTY_FIFO is 0, then
+            return 0                            '  there _are_ 0 unread samples
+        else                                    '  however, if EMPTY_FIFO is 1,
+            return 1                            '  it means there's 1 sample
+    else                                        ' otherwise
+        return (nr_samples + 1)                 '  nr_samples = FSS+1
+
 PUB IntActiveState(state): curr_state
 ' Set interrupt active state/polarity
 '   Valid values:
