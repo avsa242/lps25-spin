@@ -89,6 +89,11 @@ CON
         INT_S_MASK      = INT_S_BITS ^ CTRL_REG3_MASK
 
     CTRL_REG4           = $23
+    CTRL_REG4_MASK      = $0F
+        F_EMPTY         = 3
+        F_FTH           = 2
+        F_OVR           = 1
+        DRDY            = 0
 
     INTERRUPT_CFG       = $24
     INTERRUPT_CFG_MASK  = $07

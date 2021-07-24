@@ -112,6 +112,20 @@ PUB FIFOFull{}: flag
 '   Returns: TRUE (-1), or FALSE (0)
     return fifolevelhigh{}
 
+PUB FIFOIntMask(mask): curr_mask
+' Set FIFO interrupt mask
+'   Bits: 3..0
+'       3: FIFO empty flag
+'       2: FIFO threshold/watermark: full
+'       1: FIFO full (FIFO mode), or overrun (STREAM mode)
+'       0: data ready flag
+    case mask
+        %0000..%1111:
+            writereg(core#CTRL_REG4, 1, @mask)
+        other:
+            curr_mask := 0
+            readreg(core#CTRL_REG4, 1, @curr_mask)
+
 PUB FIFOLevelHigh{}: flag
 ' Flag indicating FIFO is greater than or equal to level set with
 '   FIFOThreshold()
