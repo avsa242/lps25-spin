@@ -107,6 +107,21 @@ PUB FIFOEmpty{}: flag
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#EMPTY_FIFO) & 1) == 1)
 
+PUB FIFOEnabled(state): curr_state
+' Enable FIFO
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#CTRL_REG2, 1, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ||(state) << core#FIFO_EN
+        other:
+            return ((curr_state >> core#FIFO_EN) & 1) == 1
+
+    state := ((curr_state & core#FIFO_EN_MASK) | state)
+    writereg(core#CTRL_REG2, 1, @state)
+
 PUB FIFOFull{}: flag
 ' Flag indicating FIFO is full (32 unread samples)
 '   Returns: TRUE (-1), or FALSE (0)
