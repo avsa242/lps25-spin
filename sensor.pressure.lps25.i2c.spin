@@ -95,6 +95,12 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB FIFOFull{}: flag
+' Flag indicating FIFO is full (32 unread samples)
+'   Returns: TRUE (-1), or FALSE (0)
+    readreg(core#FIFO_STATUS, 1, @flag)
+    return (((flag >> core#OVR) & 1) == 1)
+
 PUB FIFOMeanAvgs(nr_samples): curr_samps
 ' Set number of samples used in moving average when FIFOMode() == MEAN
 '   Valid values: 2, 4, 8, 16, 32

@@ -132,6 +132,13 @@ CON
         WTM_POINT_MASK  = WTM_POINT_BITS ^ FIFO_CTRL_MASK
 
     FIFO_STATUS         = $2F
+    FIFO_STATUS_MASK    = $FF
+        FTH_FIFO        = 7
+        OVR             = 6
+        EMPTY_FIFO      = 5
+        FSS             = 0
+        FSS_BITS        = %11111
+
     THS_P_L             = $30
     THS_P_H             = $31
 ' RESERVED $32..$38
