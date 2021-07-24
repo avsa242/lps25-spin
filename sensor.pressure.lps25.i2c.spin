@@ -447,6 +447,18 @@ PUB PressPascals{}: press_p
 ' Read pressure data, in tenths of a Pascal
     return ((pressdata{} * 100) / 4096) * 10
 
+PUB PressReference(press): curr_press
+' Set reference pressure level
+'   Valid values: 0..16777215 (0 to disable)
+'   Any other value polls the chip and returns the current setting
+    case press
+        0..16777215:
+            writereg(core#REF_P_XL, 3, @press)
+        other:
+            curr_press := 0
+            readreg(core#REF_P_XL, 3, @curr_press)
+            return curr_press
+
 PUB Reset{} | tmp
 ' Reset the device
     tmp := core#RESET

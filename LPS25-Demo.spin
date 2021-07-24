@@ -42,7 +42,6 @@ PUB Main{}
     press.preset_active{}                       ' set defaults, but enable
                                                 '   sensor power
     press.tempscale(C)                          ' C, F
-
     repeat
         ser.position(0, 3)
         presscalc{}
