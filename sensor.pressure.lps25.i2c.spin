@@ -107,6 +107,20 @@ PUB FIFOFull{}: flag
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#OVR) & 1) == 1)
 
+PUB FIFOLevelHigh{}: flag
+' Flag indicating FIFO is greater than or equal to level set with
+'   FIFOThreshold()
+'   Returns: TRUE (-1) or FALSE (0)
+    readreg(core#FIFO_STATUS, 1, @flag)
+    return (((flag >> core#FTH_FIFO) & 1) == 1)
+
+PUB FIFOLevelLow{}: flag
+' Flag indicating FIFO is less than level set with
+'   FIFOThreshold()
+'   Returns: TRUE (-1) or FALSE (0)
+    readreg(core#FIFO_STATUS, 1, @flag)
+    return (((flag >> core#FTH_FIFO) & 1) == 0)
+
 PUB FIFOMeanAvgs(nr_samples): curr_samps
 ' Set number of samples used in moving average when FIFOMode() == MEAN
 '   Valid values: 2, 4, 8, 16, 32
@@ -145,6 +159,21 @@ PUB FIFOMode(mode): curr_mode
 
     mode := ((curr_mode & core#F_MODE_MASK) | mode)
     writereg(core#FIFO_CTRL, 1, @mode)
+
+PUB FIFOThreshold(level): curr_lvl
+' Set FIFO threshold/watermark level, in number of samples
+'   Valid values: 1..32
+'   Any other value polls the chip and returns the current setting
+    curr_lvl := 0
+    readreg(core#FIFO_CTRL, 1, @curr_lvl)
+    case level
+        1..32:
+            level -= 1
+        other:
+            return ((curr_lvl & core#WTM_POINT_BITS)) + 1
+
+    level := ((curr_lvl & core#WTM_POINT_MASK) | level)
+    writereg(core#FIFO_CTRL, 1, @level)
 
 PUB FIFOUnreadSamples{}: nr_samples | isempty
 ' Number of unread samples currently in FIFO
