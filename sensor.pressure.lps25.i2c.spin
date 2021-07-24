@@ -12,13 +12,13 @@
 
 CON
 
-    SLAVE_WR          = core#SLAVE_ADDR
-    SLAVE_RD          = core#SLAVE_ADDR|1
+    SLAVE_WR        = core#SLAVE_ADDR
+    SLAVE_RD        = core#SLAVE_ADDR|1
 
-    DEF_SCL           = 28
-    DEF_SDA           = 29
-    DEF_HZ            = 100_000
-    I2C_MAX_FREQ      = core#I2C_MAX_FREQ
+    DEF_SCL         = 28
+    DEF_SDA         = 29
+    DEF_HZ          = 100_000
+    I2C_MAX_FREQ    = core#I2C_MAX_FREQ
 
 ' Operating modes
     SINGLE          = 0
@@ -31,6 +31,15 @@ CON
 ' Interrupt INT pin output modes
     PP              = 0                         ' push-pull
     OD              = 1                         ' open-drain
+
+' FIFO Modes
+    BYPASS          = 0
+    FIFO            = 1
+    STREAM          = 2
+    STM2FIFO        = 3
+    BYP2STM         = 4
+    MEAN            = 6
+    BYP2FIFO        = 7
 
 VAR
 
@@ -85,6 +94,44 @@ PUB Preset_Active{}
 PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
+
+PUB FIFOMeanAvgs(nr_samples): curr_samps
+' Set number of samples used in moving average when FIFOMode() == MEAN
+'   Valid values: 2, 4, 8, 16, 32
+'   Any other value polls the chip and returns the current setting
+    curr_samps := 0
+    readreg(core#FIFO_CTRL, 1, @curr_samps)
+    case nr_samples
+        2, 4, 8, 16, 32:
+        other:
+            return (curr_samps & core#WTM_POINT_BITS)
+
+    nr_samples := ((curr_samps & core#WTM_POINT_MASK) | nr_samples)
+    writereg(core#FIFO_CTRL, 1, @nr_samples)
+
+PUB FIFOMode(mode): curr_mode
+' Set FIFO operating mode
+'   Valid values:
+'       BYPASS (0): FIFO disabled
+'       FIFO (1): collect data, then stop when FIFO is full
+'       STREAM (2): continuously fill FIFO; oldest data discarded first
+'       STM2FIFO (3): STREAM mode until trigger is deasserted, then FIFO mode
+'       BYP2STM (4): BYPASS mode until trigger is deasserted, then STREAM mode
+'       MEAN (6): moving average of n-set of samples (n set by FIFOMeanAvgs())
+'       BYP2FIFO (7): BYPASS mode until trigger is deasserted, then FIFO mode
+'   Any other value polls the chip and returns the current setting
+'   NOTE: When mode is MEAN, the FIFO is inactive. The data read by
+'       PressData() is the result of the moving average
+    curr_mode := 0
+    readreg(core#FIFO_CTRL, 1, @curr_mode)
+    case mode
+        BYPASS, FIFO, STREAM, STM2FIFO, BYP2STM, MEAN, BYP2FIFO:
+            mode <<= core#F_MODE
+        other:
+            return ((curr_mode >> core#F_MODE) & core#F_MODE_BITS)
+
+    mode := ((curr_mode & core#F_MODE_MASK) | mode)
+    writereg(core#FIFO_CTRL, 1, @mode)
 
 PUB IntActiveState(state): curr_state
 ' Set interrupt active state/polarity

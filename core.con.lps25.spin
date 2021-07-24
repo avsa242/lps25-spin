@@ -5,7 +5,7 @@
     Description: LPS25-specific low-level constants
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jul 23, 2021
+    Updated Jul 24, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -121,7 +121,16 @@ CON
     TEMP_OUT_L          = $2B
     TEMP_OUT_H          = $2C
 ' RESERVED $2D
+
     FIFO_CTRL           = $2E
+    FIFO_CTRL_MASK      = $FF
+        F_MODE          = 5
+        WTM_POINT       = 0
+        F_MODE_BITS     = %111
+        WTM_POINT_BITS  = %11111
+        F_MODE_MASK     = (F_MODE_BITS << F_MODE) ^ FIFO_CTRL_MASK
+        WTM_POINT_MASK  = WTM_POINT_BITS ^ FIFO_CTRL_MASK
+
     FIFO_STATUS         = $2F
     THS_P_L             = $30
     THS_P_H             = $31
