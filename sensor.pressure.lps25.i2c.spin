@@ -170,6 +170,24 @@ PUB FIFOMeanAvgs(nr_samples): curr_samps
     nr_samples := ((curr_samps & core#WTM_POINT_MASK) | nr_samples)
     writereg(core#FIFO_CTRL, 1, @nr_samples)
 
+PUB FIFOMeanDataRate(rate): curr_rate
+' Set FIFO output data rate when FIFOMode() == MEAN
+'   Valid values:
+'       0: data rate = PressDataRate()
+'       1: data rate is decimated to 1Hz (internally, averaging still occurs
+'           at PressDataRate())
+'   Any other value polls the chip and returns the current setting
+    curr_rate := 0
+    readreg(core#CTRL_REG2, 1, @curr_rate)
+    case rate
+        0, 1:
+            rate <<= core#FIFO_MEAN_DEC
+        other:
+            return ((curr_rate >> core#FIFO_MEAN_DEC) & 1)
+
+    rate := ((curr_rate & core#FFO_MN_DEC_MASK) | rate)
+    writereg(core#CTRL_REG2, 1, @rate)
+
 PUB FIFOMode(mode): curr_mode
 ' Set FIFO operating mode
 '   Valid values:
