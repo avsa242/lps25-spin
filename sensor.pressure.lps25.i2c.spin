@@ -103,8 +103,9 @@ PUB FIFOMeanAvgs(nr_samples): curr_samps
     readreg(core#FIFO_CTRL, 1, @curr_samps)
     case nr_samples
         2, 4, 8, 16, 32:
+            nr_samples -= 1
         other:
-            return (curr_samps & core#WTM_POINT_BITS)
+            return (curr_samps & core#WTM_POINT_BITS) + 1
 
     nr_samples := ((curr_samps & core#WTM_POINT_MASK) | nr_samples)
     writereg(core#FIFO_CTRL, 1, @nr_samples)
