@@ -95,6 +95,12 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB FIFOEmpty{}: flag
+' Flag indicating FIFO is empty
+'   Returns: TRUE (-1), or FALSE (0)
+    readreg(core#FIFO_STATUS, 1, @flag)
+    return (((flag >> core#EMPTY_FIFO) & 1) == 1)
+
 PUB FIFOFull{}: flag
 ' Flag indicating FIFO is full (32 unread samples)
 '   Returns: TRUE (-1), or FALSE (0)
