@@ -95,6 +95,12 @@ PUB DeviceID{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
+PUB FIFODataOverrun{}: flag
+' Flag indicating FIFO is full and at least one sample has been overwritten
+'   Returns: TRUE (-1), or FALSE (0)
+    readreg(core#FIFO_STATUS, 1, @flag)
+    return (((flag >> core#OVR) & 1) == 1)
+
 PUB FIFOEmpty{}: flag
 ' Flag indicating FIFO is empty
 '   Returns: TRUE (-1), or FALSE (0)
@@ -104,8 +110,7 @@ PUB FIFOEmpty{}: flag
 PUB FIFOFull{}: flag
 ' Flag indicating FIFO is full (32 unread samples)
 '   Returns: TRUE (-1), or FALSE (0)
-    readreg(core#FIFO_STATUS, 1, @flag)
-    return (((flag >> core#OVR) & 1) == 1)
+    return fifolevelhigh{}
 
 PUB FIFOLevelHigh{}: flag
 ' Flag indicating FIFO is greater than or equal to level set with
