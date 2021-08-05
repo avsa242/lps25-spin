@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jul 23, 2021
+    Updated Aug 5, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -445,7 +445,7 @@ PUB PressOSR(ratio): curr_ratio
 
 PUB PressPascals{}: press_p
 ' Read pressure data, in tenths of a Pascal
-    return ((pressdata{} * 100) / 4096) * 10
+    return pressword2pa(pressdata{})
 
 PUB PressReference(press): curr_press
 ' Set reference pressure level
@@ -458,6 +458,10 @@ PUB PressReference(press): curr_press
             curr_press := 0
             readreg(core#REF_P_XL, 3, @curr_press)
             return curr_press
+
+PUB PressWord2Pa(p_word): p_pa
+' Convert pressure ADC word to pressure in Pascals
+    return ((p_word * 100) / 4096) * 10
 
 PUB Reset{} | tmp
 ' Reset the device
@@ -484,11 +488,7 @@ PUB Temperature{}: temp
 ' Current temperature, in hundredths of a degree
 '   Returns: Integer
 '   (e.g., 2105 is equivalent to 21.05 deg C)
-    temp := calctemp(tempdata{})
-    case _temp_scale
-        C:
-        F:
-            return ((temp * 9_00) / 5_00) + 32_00
+    return tempword2deg(tempdata{})
 
 PUB TempOSR(ratio): curr_ratio
 ' Set temperature output data oversampling ratio
@@ -518,6 +518,18 @@ PUB TempScale(scale): curr_scale
         other:
             return _temp_scale
 
+PUB TempWord2Deg(temp_word): temp
+' Convert temperature ADC word to temperature
+'   Returns: temperature, in hundredths of a degree, in chosen scale
+    temp := ((temp_word * 100) / 480) + 42_50
+    case _temp_scale
+        C:
+            return temp
+        F:
+            return ((temp * 9_00) / 5_00) + 32_00
+        other:
+            return FALSE
+
 PRI blockDataUpdate(state): curr_state
 ' Enable block data updates - don't update output data until
 '   H (MSB), L (MB) and XL (LSB) updated
@@ -533,10 +545,6 @@ PRI blockDataUpdate(state): curr_state
 
     state := ((curr_state & core#BDU_MASK) | state)
     writereg(core#CTRL_REG1, 1, @state)
-
-PRI calcTemp(temp_word): temp_c | whole, part
-' Calculate temperature in degrees Celsius, given ADC word
-    return ((temp_word * 100) / 480) + 42_50
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff
