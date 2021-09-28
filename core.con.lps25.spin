@@ -5,7 +5,7 @@
     Description: LPS25-specific low-level constants
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Jul 24, 2021
+    Updated Sep 28, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -18,6 +18,11 @@ CON
     T_POR               = 1_000                     ' startup time (usecs)
     MB_I2C              = 1 << 7
 
+' SPI configuration
+    SPI_MAX_FREQ        = 10_000_000
+    SPI_MODE            = 3
+    MS_SPI              = 1 << 6
+    READ_SPI            = 1 << 7
     DEVID_RESP          = $BD                       ' device ID expected response
 
 ' Register definitions

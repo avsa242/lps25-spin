@@ -5,10 +5,16 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2021
     Started Jun 22, 2021
-    Updated Aug 5, 2021
+    Updated Sep 28, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
+
+#ifdef LPS25_SPI3W
+#define LPS25_SPI
+#elseifdef LPS25_SPI4W
+#define LPS25_SPI
+#endif
 
 CON
 
@@ -43,18 +49,25 @@ CON
 
 VAR
 
+    byte _CS
     byte _temp_scale
 
 OBJ
 
-' choose an I2C engine below
+#ifdef LPS25_I2C
     i2c : "com.i2c"                             ' PASM I2C engine (up to ~800kHz)
+#elseifdef LPS25_SPI
+    spi : "com.spi.4w"
+#else
+#error "One of LPS25_I2C, LPS25_SPI3W, or LPS25_SPI4W must be specified"
+#endif
     core: "core.con.lps25"                      ' hw-specific low-level const's
     time: "time"                                ' basic timing functions
 
 PUB Null{}
 ' This is not a top-level object
 
+#ifdef LPS25_I2C
 PUB Start{}: status
 ' Start using "standard" Propeller I2C pins and 100kHz
     return startx(DEF_SCL, DEF_SDA, DEF_HZ)
@@ -72,10 +85,49 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
     ' Re-check I/O pin assignments, bus speed, connections, power
     ' Lastly - make sure you have at least one free core/cog 
     return FALSE
+#elseifdef LPS25_SPI3W
+PUB Startx(CS_PIN, SPC_PIN, SDIO_PIN): status
+' Start using custom IO pins and I2C bus frequency
+    if lookdown(CS_PIN: 0..31) and lookdown(SPC_PIN: 0..31) and {
+}   lookdown(SDIO_PIN: 0..31)
+        _CS := CS_PIN
+        outa[_CS] := 1
+        dira[_CS] := 1
+        if (status := spi.init(SPC_PIN, SDIO_PIN, SDIO_PIN, core#SPI_MODE))
+            time.usleep(core#T_POR)             ' wait for device startup
+            spimode(3)
+            if deviceid{} == core#DEVID_RESP    ' validate device
+                return
+    ' if this point is reached, something above failed
+    ' Re-check I/O pin assignments, bus speed, connections, power
+    ' Lastly - make sure you have at least one free core/cog
+    return FALSE
+#elseifdef LPS25_SPI4W
+PUB Startx(CS_PIN, SPC_PIN, SDI_PIN, SDO_PIN): status
+' Start using custom IO pins and I2C bus frequency
+    if lookdown(CS_PIN: 0..31) and lookdown(SPC_PIN: 0..31) and {
+}   lookdown(SDI_PIN: 0..31) and lookdown(SDO_PIN: 0..31)
+        _CS := CS_PIN
+        outa[_CS] := 1
+        dira[_CS] := 1
+        if (status := SPI.init(SPC_PIN, SDI_PIN, SDO_PIN, core#SPI_MODE))
+            time.usleep(core#T_POR)             ' wait for device startup
+            spimode(4)
+            if deviceid{} == core#DEVID_RESP    ' validate device
+                return
+    ' if this point is reached, something above failed
+    ' Re-check I/O pin assignments, bus speed, connections, power
+    ' Lastly - make sure you have at least one free core/cog
+    return FALSE
+#endif
 
 PUB Stop{}
 
+#ifdef LPS25_I2C
     i2c.deinit{}
+#elseifdef LPS25_SPI
+    spi.deinit{}
+#endif
 
 PUB Defaults{}
 ' Set factory defaults
@@ -548,14 +600,19 @@ PRI blockDataUpdate(state): curr_state
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff
-    case reg_nr                                 ' validate register num
+    case reg_nr                                 ' validate reg #
         core#REF_P_XL, core#PRESS_OUT_XL, core#TEMP_OUT_L, core#THS_P_L, {
 }       core#RPDS_L:
+#ifdef LPS25_I2C
             reg_nr |= core#MB_I2C               ' set multi-byte r/w bit
+#elseifdef LPS25_SPI
+            reg_nr |= core#MS_SPI               ' set multi-byte r/w bit
+#endif
         $0F, $10, $20..$27, $2E..$2F:
         other:                                  ' invalid reg_nr
             return
 
+#ifdef LPS25_I2C
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr
     i2c.start{}
@@ -566,16 +623,44 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
     ' read LSByte to MSByte
     i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
     i2c.stop{}
+#elseifdef LPS25_SPI
+    outa[_CS] := 0
+    spi.wr_byte(reg_nr | core#READ_SPI)
+    spi.rdblock_lsbf(ptr_buff, nr_bytes)
+    outa[_CS] := 1
+
+#endif
+
+PRI spiMode(mode)
+' Set SPI interface mode
+'   3: 3-wire
+'   4: 4-wire
+'   Any other value is ignored
+    case mode
+        3, 4:
+            ' 3-wire mode clears the bit, 4-wire sets it
+            ' subtract 3 from the param, so it's 0 or 1,
+            ' then flip the bit
+            mode := ((mode - 3) ^ 1)
+        other:
+            return
+
+    writereg(core#CTRL_REG1, 1, @mode)
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write nr_bytes to the device from ptr_buff
-    case reg_nr
+    case reg_nr                                 ' validate reg #
         core#REF_P_XL, core#THS_P_L, core#RPDS_L:
+#ifdef LPS25_I2C
             reg_nr |= core#MB_I2C               ' set multi-byte r/w bit
+#elseifdef LPS25_SPI
+            reg_nr |= core#MS_SPI               ' set multi-byte r/w bit
+#endif
         $10, $20..$24, $2E:
         other:                                  ' invalid reg_nr
             return
 
+#ifdef LPS25_I2C
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr
     i2c.start{}
@@ -584,6 +669,12 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
     ' write LSByte to MSByte
     i2c.wrblock_lsbf(ptr_buff, nr_bytes)
     i2c.stop{}
+#elseifdef LPS25_SPI
+    outa[_CS] := 0
+    spi.wr_byte(reg_nr)
+    spi.wrblock_lsbf(ptr_buff, nr_bytes)
+    outa[_CS] := 1
+#endif
 
 DAT
 {
