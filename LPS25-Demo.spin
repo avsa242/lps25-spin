@@ -3,9 +3,9 @@
     Filename: LPS25-Demo.spin
     Author: Jesse Burt
     Description: Demo of the LPS25 driver
-    Copyright (c) 2021
+    Copyright (c) 2022
     Started Jun 22, 2021
-    Updated Sep 28, 2021
+    Updated May 23, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -27,9 +27,8 @@ CON
 ' SPI configuration
     SPI_CS      = 0
     SPI_SPC     = 1
-    SPI_SDI     = 2
-    SPI_SDO     = 3                             ' 4-wire SPI only
-    SPI_SDIO    = 2                             ' 3-wire SPI only
+    SPI_SDI     = 2                             ' make these the same for
+    SPI_SDO     = 3                             '   3-wire SPI
 ' --
 
     C           = 0
@@ -42,7 +41,7 @@ OBJ
     ser   : "com.serial.terminal.ansi"
     time  : "time"
     int   : "string.integer"
-    press : "sensor.pressure.lps25.i2cspi"
+    press : "sensor.pressure.lps25"
 
 PUB Main{}
 
@@ -107,15 +106,12 @@ PUB Setup{}
     ser.clear{}
     ser.strln(string("Serial terminal started"))
 
-#ifdef LPS25_I2C
+#ifdef LPS25_SPI
+    if press.startx(SPI_CS, SPI_SPC, SPI_SDI, SPI_SDO)
+        ser.strln(string("LPS25 driver started (SPI)"))
+#else
     if press.startx(I2C_SCL, I2C_SDA, I2C_HZ)
         ser.strln(string("LPS25 driver started (I2C)"))
-#elseifdef LPS25_SPI3W
-    if press.startx(SPI_CS, SPI_SPC, SPI_SDIO)
-        ser.strln(string("LPS25 driver started (SPI-3 wire)"))
-#elseifdef LPS25_SPI4W
-    if press.startx(SPI_CS, SPI_SPC, SPI_SDI, SPI_SDO)
-        ser.strln(string("LPS25 driver started (SPI-4 wire)"))
 #endif
     else
         ser.strln(string("LPS25 driver failed to start - halting"))

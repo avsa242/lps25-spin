@@ -9,12 +9,11 @@ P1BAUD=115200
 P2BAUD=2000000
 
 # P1, P2 compilers
-P1BUILD=openspin
-#P1BUILD=flexspin
+P1BUILD=flexspin
 P2BUILD=flexspin
 
 # LPS25 interface: I2C, SPI-3wire or SPI-4wire
-#IFACE=LPS25_I2C
+IFACE=LPS25_I2C
 #IFACE=LPS25_SPI3W
 #IFACE=LPS25_SPI4W
 

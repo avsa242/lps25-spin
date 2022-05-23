@@ -3,18 +3,12 @@
     Filename: sensor.pressure.lps25.i2c.spin
     Author: Jesse Burt
     Description: Driver for the ST LPS25 Barometric Pressure sensor
-    Copyright (c) 2021
+    Copyright (c) 2022
     Started Jun 22, 2021
-    Updated Sep 28, 2021
+    Updated May 23, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
-
-#ifdef LPS25_SPI3W
-#define LPS25_SPI
-#elseifdef LPS25_SPI4W
-#define LPS25_SPI
-#endif
 
 CON
 
@@ -54,12 +48,24 @@ VAR
 
 OBJ
 
-#ifdef LPS25_I2C
-    i2c : "com.i2c"                             ' PASM I2C engine (up to ~800kHz)
-#elseifdef LPS25_SPI
-    spi : "com.spi.4w"
+{ SPI? }
+#ifdef LPS25_SPI
+{ decide: Bytecode SPI engine, or PASM? Default is PASM if BC isn't specified }
+#ifdef LPS25_SPI_BC
+    spi : "tiny.com.spi"                        ' BC SPI engine
 #else
-#error "One of LPS25_I2C, LPS25_SPI3W, or LPS25_SPI4W must be specified"
+    spi : "com.spi.4w"                          ' PASM SPI engine
+#endif
+#else
+{ no, not SPI - default to I2C }
+#define LPS25_I2C
+{ decide: Bytecode I2C engine, or PASM? Default is PASM if BC isn't specified }
+#ifdef LPS25_I2C_BC
+    i2c : "tiny.com.i2c"                        ' BC I2C engine
+#else
+    i2c : "com.i2c"                             ' PASM I2C engine
+#endif
+
 #endif
     core: "core.con.lps25"                      ' hw-specific low-level const's
     time: "time"                                ' basic timing functions
@@ -85,24 +91,9 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
     ' Re-check I/O pin assignments, bus speed, connections, power
     ' Lastly - make sure you have at least one free core/cog 
     return FALSE
-#elseifdef LPS25_SPI3W
-PUB Startx(CS_PIN, SPC_PIN, SDIO_PIN): status
-' Start using custom IO pins and I2C bus frequency
-    if lookdown(CS_PIN: 0..31) and lookdown(SPC_PIN: 0..31) and {
-}   lookdown(SDIO_PIN: 0..31)
-        _CS := CS_PIN
-        outa[_CS] := 1
-        dira[_CS] := 1
-        if (status := spi.init(SPC_PIN, SDIO_PIN, SDIO_PIN, core#SPI_MODE))
-            time.usleep(core#T_POR)             ' wait for device startup
-            spimode(3)
-            if deviceid{} == core#DEVID_RESP    ' validate device
-                return
-    ' if this point is reached, something above failed
-    ' Re-check I/O pin assignments, bus speed, connections, power
-    ' Lastly - make sure you have at least one free core/cog
-    return FALSE
-#elseifdef LPS25_SPI4W
+
+#elseifdef LPS25_SPI
+
 PUB Startx(CS_PIN, SPC_PIN, SDI_PIN, SDO_PIN): status
 ' Start using custom IO pins and I2C bus frequency
     if lookdown(CS_PIN: 0..31) and lookdown(SPC_PIN: 0..31) and {
@@ -112,7 +103,10 @@ PUB Startx(CS_PIN, SPC_PIN, SDI_PIN, SDO_PIN): status
         dira[_CS] := 1
         if (status := SPI.init(SPC_PIN, SDI_PIN, SDO_PIN, core#SPI_MODE))
             time.usleep(core#T_POR)             ' wait for device startup
-            spimode(4)
+            if (SDI_PIN == SDO_PIN)
+                spimode(3)
+            else
+                spimode(4)
             if deviceid{} == core#DEVID_RESP    ' validate device
                 return
     ' if this point is reached, something above failed
