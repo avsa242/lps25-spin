@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2022
     Started Jun 22, 2021
-    Updated May 23, 2022
+    Updated May 25, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -52,7 +52,7 @@ OBJ
 #ifdef LPS25_SPI
 { decide: Bytecode SPI engine, or PASM? Default is PASM if BC isn't specified }
 #ifdef LPS25_SPI_BC
-    spi : "tiny.com.spi"                        ' BC SPI engine
+    spi : "com.spi.nocog"                       ' BC SPI engine
 #else
     spi : "com.spi.4w"                          ' PASM SPI engine
 #endif
@@ -61,7 +61,7 @@ OBJ
 #define LPS25_I2C
 { decide: Bytecode I2C engine, or PASM? Default is PASM if BC isn't specified }
 #ifdef LPS25_I2C_BC
-    i2c : "tiny.com.i2c"                        ' BC I2C engine
+    i2c : "com.i2c.nocog"                       ' BC I2C engine
 #else
     i2c : "com.i2c"                             ' PASM I2C engine
 #endif
