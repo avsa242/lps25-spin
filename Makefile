@@ -19,8 +19,8 @@ IFACE=LPS25_I2C
 
 # Paths to spin-standard-library, and p2-spin-standard-library,
 #  if not specified externally
-SPIN1_LIB_PATH=-L ../spin-standard-library/library
-SPIN2_LIB_PATH=-L ../p2-spin-standard-library/library
+SPIN1_LIB_PATH=$(HOME)/spin-standard-library/library
+SPIN2_LIB_PATH=$(HOME)/p2-spin-standard-library/library
 
 
 # -- Internal --
@@ -38,10 +38,10 @@ p2demo: loadp2demo
 
 # Build binaries
 LPS25-Demo.binary: LPS25-Demo.spin $(SPIN1_DRIVER_FN) $(CORE_FN)
-	$(P1BUILD) $(SPIN1_LIB_PATH) -b -D $(IFACE) LPS25-Demo.spin
+	$(P1BUILD) -L $(SPIN1_LIB_PATH) -b -D $(IFACE) LPS25-Demo.spin
 
 LPS25-Demo.bin2: LPS25-Demo.spin2 $(SPIN2_DRIVER_FN) $(CORE_FN)
-	$(P2BUILD) $(SPIN2_LIB_PATH) -b -2 -D $(IFACE) -o LPS25-Demo.bin2 LPS25-Demo.spin2
+	$(P2BUILD) -L $(SPIN2_LIB_PATH) -b -2 -D $(IFACE) -o LPS25-Demo.bin2 LPS25-Demo.spin2
 
 # Load binaries to RAM (will build first, if necessary)
 loadp1demo: LPS25-Demo.binary
