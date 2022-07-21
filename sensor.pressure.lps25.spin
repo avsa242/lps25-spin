@@ -9,7 +9,7 @@
     See end of file for terms of use.
     --------------------------------------------
 }
-#include "sensor.pressure-common.spinh"
+#include "sensor.pressure.common.spinh"
 #include "sensor.temp.common.spinh"
 
 CON
