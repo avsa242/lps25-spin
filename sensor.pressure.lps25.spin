@@ -5,10 +5,12 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2022
     Started Jun 22, 2021
-    Updated May 25, 2022
+    Updated Jul 21, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
+#include "sensor.pressure-common.spinh"
+#include "sensor.temp-common.spinh"
 
 CON
 
@@ -44,7 +46,6 @@ CON
 VAR
 
     byte _CS
-    byte _temp_scale
 
 OBJ
 
@@ -489,10 +490,6 @@ PUB PressOSR(ratio): curr_ratio
     ratio := ((curr_ratio & core#AVGP_MASK) | ratio)
     writereg(core#RES_CONF, 1, @ratio)
 
-PUB PressPascals{}: press_p
-' Read pressure data, in tenths of a Pascal
-    return pressword2pa(pressdata{})
-
 PUB PressReference(press): curr_press
 ' Set reference pressure level
 '   Valid values: 0..16777215 (0 to disable)
@@ -530,12 +527,6 @@ PUB TempDataReady{}: flag
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#TDRDY) <> 0)
 
-PUB Temperature{}: temp
-' Current temperature, in hundredths of a degree
-'   Returns: Integer
-'   (e.g., 2105 is equivalent to 21.05 deg C)
-    return tempword2deg(tempdata{})
-
 PUB TempOSR(ratio): curr_ratio
 ' Set temperature output data oversampling ratio
 '   Valid values: 8, 16, 32, 64
@@ -551,18 +542,6 @@ PUB TempOSR(ratio): curr_ratio
 
     ratio := ((curr_ratio & core#AVGT_MASK) | ratio)
     writereg(core#RES_CONF, 1, @ratio)
-
-PUB TempScale(scale): curr_scale
-' Set temperature scale used by Temperature method
-'   Valid values:
-'      *C (0): Celsius
-'       F (1): Fahrenheit
-'   Any other value returns the current setting
-    case scale
-        C, F:
-            _temp_scale := scale
-        other:
-            return _temp_scale
 
 PUB TempWord2Deg(temp_word): temp
 ' Convert temperature ADC word to temperature
