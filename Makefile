@@ -1,6 +1,6 @@
 # lps25-spin Makefile - requires GNU Make, or compatible
 # Variables below can be overridden on the command line
-#	e.g. IFACE=LPS25_SPI3W make
+#	e.g. IFACE=LPS25_SPI make
 
 # P1, P2 device nodes and baudrates
 #P1DEV=
@@ -9,13 +9,13 @@ P1BAUD=115200
 P2BAUD=2000000
 
 # P1, P2 compilers
-P1BUILD=flexspin
-P2BUILD=flexspin
+#P1BUILD=flexspin
+P1BUILD=flexspin --interp=rom
+P2BUILD=flexspin -2
 
-# LPS25 interface: I2C, SPI-3wire or SPI-4wire
+# LPS25 interface: I2C, SPI
 IFACE=LPS25_I2C
-#IFACE=LPS25_SPI3W
-#IFACE=LPS25_SPI4W
+#IFACE=LPS25_SPI
 
 # Paths to spin-standard-library, and p2-spin-standard-library,
 #  if not specified externally
@@ -24,8 +24,8 @@ SPIN2_LIB_PATH=-L ../p2-spin-standard-library/library
 
 
 # -- Internal --
-SPIN1_DRIVER_FN=sensor.pressure.lps25.i2cspi.spin
-SPIN2_DRIVER_FN=sensor.pressure.lps25.i2cspi.spin2
+SPIN1_DRIVER_FN=sensor.pressure.lps25.spin
+SPIN2_DRIVER_FN=sensor.pressure.lps25.spin2
 CORE_FN=core.con.lps25.spin
 # --
 

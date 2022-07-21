@@ -2,137 +2,91 @@
     --------------------------------------------
     Filename: LPS25-Demo.spin2
     Author: Jesse Burt
-    Description: Demo of the LPS25 driver (P2 version)
+    Description: LPS25 driver demo (P2 version)
+        * Pressure data output
     Copyright (c) 2022
     Started Sep 28, 2021
-    Updated May 23, 2022
+    Updated Jul 20, 2022
     See end of file for terms of use.
     --------------------------------------------
-}
 
+    Build-time symbols supported by driver:
+        -DLPS25_SPI
+        -DLPS25_I2C (default if none specified)
+}
 CON
 
     _clkfreq    = cfg._clkfreq_def
     _xtlfreq    = cfg._xtlfreq
 
-' -- User-defined constants
+' -- User-modifiable constants
     SER_BAUD    = 2_000_000
-    LED         = cfg.LED1
 
-    I2C_SCL     = 12
-    I2C_SDA     = 13
-    I2C_HZ      = 400_000
+    { I2C configuration }
+    SCL_PIN     = 0
+    SDA_PIN     = 1
+    I2C_FREQ    = 400_000                       ' max is 400_000
+    ADDR_BITS   = 0                             ' %000..%111 (0..7)
 
-    SPI_CS      = 8
-    SPI_SPC     = 9
-    SPI_SDI     = 10                            ' make these the same for
-    SPI_SDO     = 11                            '   3-wire SPI
-    SPI_HZ      = 1_000_000
+    { SPI configuration }
+    CS_PIN      = 0
+    SCK_PIN     = 1                             ' SPC
+    MOSI_PIN    = 2                             ' SDI
+    MISO_PIN    = 3                             ' SDO
+    SPI_FREQ    = 10_000_000                    ' max is 10_000_000
+'   NOTE: If LPS25_SPI is #defined, and MOSI_PIN and MISO_PIN are the same,
+'   the driver will attempt to start in 3-wire SPI mode.
 ' --
-
-    C           = 0
-    F           = 1
-    DAT_X_COL   = 25
 
 OBJ
 
-    cfg   : "core.con.boardcfg.p2eval"
-    ser   : "com.serial.terminal.ansi"
-    int   : "string.integer"
-    press : "sensor.pressure.lps25"
-
-PUB Main()
-
-    setup()
-    press.preset_active()                       ' set defaults, but enable
-                                                '   sensor power
-    press.tempscale(C)                          ' C, F
-    repeat
-        ser.position(0, 3)
-        presscalc()
-        tempcalc()
-
-PUB PressCalc()
-
-    repeat until press.pressdataready()
-    ser.str(string("Barometric pressure (Pa):"))
-    ser.positionx(DAT_X_COL)
-    decimal(press.presspascals(), 10)
-    ser.clearline()
-    ser.newline()
-
-PUB TempCalc()
-
-    repeat until press.tempdataready()
-    ser.str(string("Temperature: "))
-    ser.positionx(DAT_X_COL)
-    decimal(press.temperature, 100)
-    ser.clearline()
-    ser.newline()
-
-PRI Decimal(scaled, divisor) | whole[4], part[4], places, tmp, sign
-' Display a scaled up number as a decimal
-'   Scale it back down by divisor (e.g., 10, 100, 1000, etc)
-    whole := scaled / divisor
-    tmp := divisor
-    places := 0
-    part := 0
-    sign := 0
-    if scaled < 0
-        sign := "-"
-    else
-        sign := " "
-
-    repeat
-        tmp /= 10
-        places++
-    until tmp == 1
-    scaled //= divisor
-    part := int.deczeroed(abs(scaled), places)
-
-    ser.char(sign)
-    ser.dec(abs(whole))
-    ser.char(".")
-    ser.str(part)
-    ser.chars(" ", 5)
-
+    cfg:    "core.con.boardcfg.p2eval"
+    sensr:  "sensor.pressure.lps25"
+    ser:    "com.serial.terminal.ansi"
 
 PUB Setup()
 
     ser.start(SER_BAUD)
-    waitms(30)
+    waitms(10)
     ser.clear()
-    ser.strln(string("Serial terminal started"))
+    ser.strln(@"Serial terminal started")
 
 #ifdef LPS25_SPI
-    if press.startx(SPI_CS, SPI_SPC, SPI_SDI, SPI_SDO, SPI_HZ)
-        ser.strln(string("LPS25 driver started (SPI)"))
+    if (sensr.startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_FREQ))
 #else
-    if press.startx(I2C_SCL, I2C_SDA, I2C_HZ)
-        ser.strln(string("LPS25 driver started (I2C)"))
+    if (sensr.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
 #endif
+        ser.strln(@"LPS25 driver started")
     else
-        ser.strln(string("LPS25 driver failed to start - halting"))
+        ser.strln(@"LPS25 driver failed to start - halting")
         repeat
+
+    sensr.preset_active()                       ' set defaults, but enable
+                                                '   sensor power
+    demo()
+
+#include "pressdemo-common.spin2h"              ' code common to all pressure demos
 
 DAT
 {
-    --------------------------------------------------------------------------------------------------------
-    TERMS OF USE: MIT License
+TERMS OF USE: MIT License
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-    associated documentation files (the "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    --------------------------------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 }
+
