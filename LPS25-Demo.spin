@@ -46,7 +46,7 @@ OBJ
     ser:    "com.serial.terminal.ansi"
     time:   "time"
 
-PUB Setup{}
+PUB setup{}
 
     ser.start(SER_BAUD)
     time.msleep(10)

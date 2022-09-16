@@ -44,7 +44,7 @@ OBJ
     sensr:  "sensor.pressure.lps25"
     ser:    "com.serial.terminal.ansi"
 
-PUB Setup()
+PUB setup()
 
     ser.start(SER_BAUD)
     waitms(10)
