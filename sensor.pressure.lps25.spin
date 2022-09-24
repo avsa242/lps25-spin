@@ -75,7 +75,7 @@ PUB null{}
 ' This is not a top-level object
 
 #ifdef LPS25_I2C
-PUB Start{}: status
+PUB start{}: status
 ' Start using "standard" Propeller I2C pins and 100kHz
     return startx(DEF_SCL, DEF_SDA, DEF_HZ)
 
@@ -86,7 +86,7 @@ PUB startx(SCL_PIN, SDA_PIN, I2C_HZ): status
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)             ' wait for device startup
             if i2c.present(SLAVE_WR)            ' test device bus presence
-                if deviceid{} == core#DEVID_RESP' validate device 
+                if (dev_id{} == core#DEVID_RESP)' validate device 
                     return
     ' if this point is reached, something above failed
     ' Re-check I/O pin assignments, bus speed, connections, power
@@ -108,7 +108,7 @@ PUB startx(CS_PIN, SPC_PIN, SDI_PIN, SDO_PIN): status
                 spimode(3)
             else
                 spimode(4)
-            if deviceid{} == core#DEVID_RESP    ' validate device
+            if (dev_id{} == core#DEVID_RESP)    ' validate device
                 return
     ' if this point is reached, something above failed
     ' Re-check I/O pin assignments, bus speed, connections, power
@@ -135,26 +135,26 @@ PUB preset_active{}
 '   * Enable block data updates (private)
     reset{}
     powered(true)
-    blockdataupdate(true)
-    pressdatarate(25)
+    blk_data_upd(true)
+    press_data_rate(25)
 
-PUB deviceid{}: id
+PUB dev_id{}: id
 ' Read device identification
     readreg(core#WHO_AM_I, 1, @id)
 
-PUB fifodataoverrun{}: flag
+PUB fifo_data_overrun{}: flag
 ' Flag indicating FIFO is full and at least one sample has been overwritten
 '   Returns: TRUE (-1), or FALSE (0)
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#OVR) & 1) == 1)
 
-PUB fifoempty{}: flag
+PUB fifo_empty{}: flag
 ' Flag indicating FIFO is empty
 '   Returns: TRUE (-1), or FALSE (0)
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#EMPTY_FIFO) & 1) == 1)
 
-PUB fifoenabled(state): curr_state
+PUB fifo_ena(state): curr_state
 ' Enable FIFO
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
@@ -169,12 +169,12 @@ PUB fifoenabled(state): curr_state
     state := ((curr_state & core#FIFO_EN_MASK) | state)
     writereg(core#CTRL_REG2, 1, @state)
 
-PUB fifofull{}: flag
+PUB fifo_full{}: flag
 ' Flag indicating FIFO is full (32 unread samples)
 '   Returns: TRUE (-1), or FALSE (0)
     return fifolevelhigh{}
 
-PUB fifointmask(mask): curr_mask
+PUB fifo_int_mask(mask): curr_mask
 ' Set FIFO interrupt mask
 '   Bits: 3..0
 '       3: FIFO empty flag
@@ -188,22 +188,22 @@ PUB fifointmask(mask): curr_mask
             curr_mask := 0
             readreg(core#CTRL_REG4, 1, @curr_mask)
 
-PUB fifolevelhigh{}: flag
+PUB fifo_lvl_high{}: flag
 ' Flag indicating FIFO is greater than or equal to level set with
 '   FIFOThreshold()
 '   Returns: TRUE (-1) or FALSE (0)
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#FTH_FIFO) & 1) == 1)
 
-PUB fifolevellow{}: flag
+PUB fifo_lvl_low{}: flag
 ' Flag indicating FIFO is less than level set with
 '   FIFOThreshold()
 '   Returns: TRUE (-1) or FALSE (0)
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#FTH_FIFO) & 1) == 0)
 
-PUB fifomeanavgs(nr_samples): curr_samps
-' Set number of samples used in moving average when FIFOMode() == MEAN
+PUB fifo_mean_avgs(nr_samples): curr_samps
+' Set number of samples used in moving average when fifo_mode() == MEAN
 '   Valid values: 2, 4, 8, 16, 32
 '   Any other value polls the chip and returns the current setting
     curr_samps := 0
@@ -217,8 +217,8 @@ PUB fifomeanavgs(nr_samples): curr_samps
     nr_samples := ((curr_samps & core#WTM_POINT_MASK) | nr_samples)
     writereg(core#FIFO_CTRL, 1, @nr_samples)
 
-PUB fifomeandatarate(rate): curr_rate
-' Set FIFO output data rate when FIFOMode() == MEAN
+PUB fifo_mean_data_rate(rate): curr_rate
+' Set FIFO output data rate when fifo_mode() == MEAN
 '   Valid values:
 '       0: data rate = PressDataRate()
 '       1: data rate is decimated to 1Hz (internally, averaging still occurs
@@ -235,7 +235,7 @@ PUB fifomeandatarate(rate): curr_rate
     rate := ((curr_rate & core#FFO_MN_DEC_MASK) | rate)
     writereg(core#CTRL_REG2, 1, @rate)
 
-PUB fifomode(mode): curr_mode
+PUB fifo_mode(mode): curr_mode
 ' Set FIFO operating mode
 '   Valid values:
 '       BYPASS (0): FIFO disabled
@@ -259,7 +259,7 @@ PUB fifomode(mode): curr_mode
     mode := ((curr_mode & core#F_MODE_MASK) | mode)
     writereg(core#FIFO_CTRL, 1, @mode)
 
-PUB fifothreshold(level): curr_lvl
+PUB fifo_thresh(level): curr_lvl
 ' Set FIFO threshold/watermark level, in number of samples
 '   Valid values: 1..32
 '   Any other value polls the chip and returns the current setting
@@ -274,7 +274,7 @@ PUB fifothreshold(level): curr_lvl
     level := ((curr_lvl & core#WTM_POINT_MASK) | level)
     writereg(core#FIFO_CTRL, 1, @level)
 
-PUB fifounreadsamples{}: nr_samples | isempty
+PUB fifo_nr_unread{}: nr_samples | isempty
 ' Number of unread samples currently in FIFO
 '   Returns: 0..32
     readreg(core#FIFO_STATUS, 1, @nr_samples)
@@ -290,7 +290,7 @@ PUB fifounreadsamples{}: nr_samples | isempty
     else                                        ' otherwise
         return (nr_samples + 1)                 '  nr_samples = FSS+1
 
-PUB intactivestate(state): curr_state
+PUB int_polarity(state): curr_state
 ' Set interrupt active state/polarity
 '   Valid values:
 '       0: active low
@@ -316,7 +316,7 @@ PUB interrupt{}: mask
     mask := 0
     readreg(core#INT_SOURCE, 1, @mask)
 
-PUB intmask(mask): curr_mask
+PUB int_mask(mask): curr_mask
 ' Set interrupt mask
 '   Bits: 1..0
 '       1: pressure low
@@ -332,7 +332,7 @@ PUB intmask(mask): curr_mask
     mask := ((curr_mask & core#PE_MASK) | mask)
     writereg(core#INTERRUPT_CFG, 1, @mask)
 
-PUB intmode(mode): curr_mode
+PUB int_mode(mode): curr_mode
 ' Set interrupt pin output mode
 '   Valid values:
 '       PP (0): Push-pull
@@ -349,7 +349,7 @@ PUB intmode(mode): curr_mode
     mode := ((curr_mode & core#PP_OD_MASK) | mode)
     writereg(core#CTRL_REG3, 1, @mode)
 
-PUB intsenabled(state): curr_state
+PUB int_ena(state): curr_state
 ' Enable interrupt generation
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
@@ -364,7 +364,7 @@ PUB intsenabled(state): curr_state
     state := ((curr_state & core#DIFF_EN_MASK) | state)
     writereg(core#CTRL_REG1, 1, @state)
 
-PUB intslatched(state): curr_state
+PUB int_latch_ena(state): curr_state
 ' Latch interrupts
 '   Valid values:
 '       FALSE (0): interrupt clears when condition is no longer met
@@ -391,16 +391,16 @@ PUB opmode(mode): curr_mode
 '       SINGLE (0): Single-shot/standby
 '       CONT (1): Continuous measurement
 '   Any other value polls the chip and returns the current setting
-'   NOTE: If PressDataRate() is set to _any_ non-zero value, this method will
+'   NOTE: If press_data_rate() is set to _any_ non-zero value, this method will
 '       return '1' for the current setting
 '   NOTE: CONT sets output data rate to 1Hz
     case mode
         SINGLE:
-            pressdatarate(0)
+            press_data_rate(0)
         CONT:
-            pressdatarate(1)
+            press_data_rate(1)
         other:
-            return ||(pressdatarate(-2) <> 0)
+            return ||(press_data_rate(-2) <> 0)
 
 PUB powered(state): curr_state
 ' Enable sensor power
@@ -417,7 +417,7 @@ PUB powered(state): curr_state
     state := ((curr_state & core#PD_MASK) | state)
     writereg(core#CTRL_REG1, 1, @state)
 
-PUB pressbias(offs): curr_offs
+PUB press_bias(offs): curr_offs
 ' Set pressure bias/offset
 '   Valid values: -32768..32767
 '   Any other value polls the chip and returns the current setting
@@ -429,21 +429,21 @@ PUB pressbias(offs): curr_offs
             readreg(core#RPDS_L, 2, @curr_offs)
             return
 
-PUB pressdata{}: press_adc
+PUB press_data{}: press_adc
 ' Read pressure data
 '   Returns: s24
     readreg(core#PRESS_OUT_XL, 3, @press_adc)
 
-PUB pressdataoverrun{}: flag
+PUB press_data_overrun{}: flag
 ' Flag indicating pressure data has overrun
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#POVR) <> 0)
 
-PUB pressdatarate(rate): curr_rate
+PUB press_data_rate(rate): curr_rate
 ' Set pressure output data rate, in Hz
 '   Valid values: 0, 1, 7, 12 (12.5), 25
 '   Any other value polls the chip and returns the current setting
-'   NOTE: A value of 0 is equivalent to setting OpMode(SINGLE)
+'   NOTE: A value of 0 is equivalent to setting opmode(SINGLE)
     curr_rate := 0
     readreg(core#CTRL_REG1, 1, @curr_rate)
     case rate
@@ -456,25 +456,24 @@ PUB pressdatarate(rate): curr_rate
     rate := ((curr_rate & core#ODR_MASK) | rate)
     writereg(core#CTRL_REG1, 1, @rate)
 
-PUB pressdataready{}: flag
+PUB press_data_rdy{}: flag
 ' Flag indicating pressure data ready
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#PDRDY) <> 0)
 
-PUB pressintthresh(thresh): curr_thr
+PUB press_int_set_thresh(thresh)
 ' Set threshold for pressure interrupt source, in hPa
-'   Valid values: 0..1260
-'   Any other value polls the chip and returns the current setting
-    case thresh
-        0..1260:
-            thresh *= 16
-            writereg(core#THS_P_L, 2, @thresh)
-        other:
-            curr_thr := 0
-            readreg(core#THS_P_L, 2, @curr_thr)
-            return curr_thr / 16
+'   Valid values: 0..1260 (clamped to range)
+    thresh := (0 #> thresh <# 1260) * 16
+    writereg(core#THS_P_L, 2, @thresh)
+ 
+PUB press_int_thresh(thresh): curr_thr
+' Get threshold for pressure interrupt source, in hPa
+    curr_thr := 0
+    readreg(core#THS_P_L, 2, @curr_thr)
+    return (curr_thr / 16)
 
-PUB pressosr(ratio): curr_ratio
+PUB press_osr(ratio): curr_ratio
 ' Set pressure output data oversampling ratio
 '   Valid values: 8, 32, 128, 512
 '   Any other value polls the chip and returns the current setting
@@ -490,7 +489,7 @@ PUB pressosr(ratio): curr_ratio
     ratio := ((curr_ratio & core#AVGP_MASK) | ratio)
     writereg(core#RES_CONF, 1, @ratio)
 
-PUB pressreference(press): curr_press
+PUB press_reference(press): curr_press
 ' Set reference pressure level
 '   Valid values: 0..16777215 (0 to disable)
 '   Any other value polls the chip and returns the current setting
@@ -502,7 +501,7 @@ PUB pressreference(press): curr_press
             readreg(core#REF_P_XL, 3, @curr_press)
             return curr_press
 
-PUB pressword2pa(p_word): p_pa
+PUB press_word2pa(p_word): p_pa
 ' Convert pressure ADC word to pressure in Pascals
     return ((p_word * 100) / 4096) * 10
 
@@ -511,23 +510,23 @@ PUB reset{} | tmp
     tmp := core#RESET
     writereg(core#CTRL_REG2, 1, @tmp)
 
-PUB tempdata{}: temp_adc
+PUB temp_data{}: temp_adc
 ' Read temperature data
 '   Returns: s16
     readreg(core#TEMP_OUT_L, 2, @temp_adc)
     return ~~temp_adc
 
-PUB tempdataoverrun{}: flag
+PUB temp_data_overrun{}: flag
 ' Flag indicating temperature data has overrun
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#TOVR) <> 0)
 
-PUB tempdataready{}: flag
+PUB temp_data_rdy{}: flag
 ' Flag indicating temperature data ready
     readreg(core#STATUS_REG, 1, @flag)
     return ((flag & core#TDRDY) <> 0)
 
-PUB temposr(ratio): curr_ratio
+PUB temp_osr(ratio): curr_ratio
 ' Set temperature output data oversampling ratio
 '   Valid values: 8, 16, 32, 64
 '   Any other value polls the chip and returns the current setting
@@ -543,7 +542,7 @@ PUB temposr(ratio): curr_ratio
     ratio := ((curr_ratio & core#AVGT_MASK) | ratio)
     writereg(core#RES_CONF, 1, @ratio)
 
-PUB tempword2deg(temp_word): temp
+PUB temp_word2deg(temp_word): temp
 ' Convert temperature ADC word to temperature
 '   Returns: temperature, in hundredths of a degree, in chosen scale
     temp := ((temp_word * 100) / 480) + 42_50
@@ -555,7 +554,7 @@ PUB tempword2deg(temp_word): temp
         other:
             return FALSE
 
-PRI blockdataupdate(state): curr_state
+PRI blk_data_upd(state): curr_state
 ' Enable block data updates - don't update output data until
 '   H (MSB), L (MB) and XL (LSB) updated
 '   Valid values: TRUE (-1 or 1), FALSE (0)
@@ -604,7 +603,7 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 #endif
 
-PRI spimode(mode)
+PRI spi_mode(mode)
 ' Set SPI interface mode
 '   3: 3-wire
 '   4: 4-wire
