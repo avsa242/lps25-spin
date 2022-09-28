@@ -1,11 +1,11 @@
 {
     --------------------------------------------
-    Filename: sensor.pressure.lps25.i2c.spin
+    Filename: sensor.pressure.lps25.spin
     Author: Jesse Burt
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2022
     Started Jun 22, 2021
-    Updated Jul 21, 2022
+    Updated Sep 28, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -25,10 +25,6 @@ CON
 ' Operating modes
     SINGLE          = 0
     CONT            = 1
-
-' Temperature scales
-    C               = 0
-    F               = 1
 
 ' Interrupt INT pin output modes
     PP              = 0                         ' push-pull
@@ -81,8 +77,7 @@ PUB start{}: status
 
 PUB startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom IO pins and I2C bus frequency
-    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}   I2C_HZ =< core#I2C_MAX_FREQ                 ' validate pins and bus freq
+    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and I2C_HZ =< core#I2C_MAX_FREQ
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)             ' wait for device startup
             if i2c.present(SLAVE_WR)            ' test device bus presence
@@ -172,7 +167,7 @@ PUB fifo_ena(state): curr_state
 PUB fifo_full{}: flag
 ' Flag indicating FIFO is full (32 unread samples)
 '   Returns: TRUE (-1), or FALSE (0)
-    return fifolevelhigh{}
+    return fifo_lvl_high{}
 
 PUB fifo_int_mask(mask): curr_mask
 ' Set FIFO interrupt mask
@@ -189,15 +184,13 @@ PUB fifo_int_mask(mask): curr_mask
             readreg(core#CTRL_REG4, 1, @curr_mask)
 
 PUB fifo_lvl_high{}: flag
-' Flag indicating FIFO is greater than or equal to level set with
-'   FIFOThreshold()
+' Flag indicating FIFO is greater than or equal to level set with fifo_thresh()
 '   Returns: TRUE (-1) or FALSE (0)
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#FTH_FIFO) & 1) == 1)
 
 PUB fifo_lvl_low{}: flag
-' Flag indicating FIFO is less than level set with
-'   FIFOThreshold()
+' Flag indicating FIFO is less than level set with fifo_thresh()
 '   Returns: TRUE (-1) or FALSE (0)
     readreg(core#FIFO_STATUS, 1, @flag)
     return (((flag >> core#FTH_FIFO) & 1) == 0)
@@ -220,9 +213,8 @@ PUB fifo_mean_avgs(nr_samples): curr_samps
 PUB fifo_mean_data_rate(rate): curr_rate
 ' Set FIFO output data rate when fifo_mode() == MEAN
 '   Valid values:
-'       0: data rate = PressDataRate()
-'       1: data rate is decimated to 1Hz (internally, averaging still occurs
-'           at PressDataRate())
+'       0: data rate = press_data_rate()
+'       1: data rate is decimated to 1Hz (internally, averaging still occurs at press_data_rate())
 '   Any other value polls the chip and returns the current setting
     curr_rate := 0
     readreg(core#CTRL_REG2, 1, @curr_rate)
@@ -243,11 +235,11 @@ PUB fifo_mode(mode): curr_mode
 '       STREAM (2): continuously fill FIFO; oldest data discarded first
 '       STM2FIFO (3): STREAM mode until trigger is deasserted, then FIFO mode
 '       BYP2STM (4): BYPASS mode until trigger is deasserted, then STREAM mode
-'       MEAN (6): moving average of n-set of samples (n set by FIFOMeanAvgs())
+'       MEAN (6): moving average of n-set of samples (n set by fifo_mean_avgs())
 '       BYP2FIFO (7): BYPASS mode until trigger is deasserted, then FIFO mode
 '   Any other value polls the chip and returns the current setting
-'   NOTE: When mode is MEAN, the FIFO is inactive. The data read by
-'       PressData() is the result of the moving average
+'   NOTE: When mode is MEAN, the FIFO is inactive. The data read by press_data() is the result of
+'       the moving average
     curr_mode := 0
     readreg(core#FIFO_CTRL, 1, @curr_mode)
     case mode
@@ -368,7 +360,7 @@ PUB int_latch_ena(state): curr_state
 ' Latch interrupts
 '   Valid values:
 '       FALSE (0): interrupt clears when condition is no longer met
-'       TRUE (-1, 1): interrupt clears only when state is read with Interrupt()
+'       TRUE (-1, 1): interrupt clears only when state is read with interrupt()
     curr_state := 0
     readreg(core#INTERRUPT_CFG, 1, @curr_state)
     case ||(state)
@@ -489,17 +481,17 @@ PUB press_osr(ratio): curr_ratio
     ratio := ((curr_ratio & core#AVGP_MASK) | ratio)
     writereg(core#RES_CONF, 1, @ratio)
 
-PUB press_reference(press): curr_press
+PUB press_ref_lvl{}: press
+' Get reference pressure level
+    press := 0
+    readreg(core#REF_P_XL, 3, @press)
+    return press
+
+PUB press_set_ref_lvl(press)
 ' Set reference pressure level
-'   Valid values: 0..16777215 (0 to disable)
-'   Any other value polls the chip and returns the current setting
-    case press
-        0..16777215:
-            writereg(core#REF_P_XL, 3, @press)
-        other:
-            curr_press := 0
-            readreg(core#REF_P_XL, 3, @curr_press)
-            return curr_press
+'   Valid values: 0..16777215 (0 to disable; clamped to range)
+    press := 0 #> press <# 16777215
+    writereg(core#REF_P_XL, 3, @press)
 
 PUB press_word2pa(p_word): p_pa
 ' Convert pressure ADC word to pressure in Pascals
