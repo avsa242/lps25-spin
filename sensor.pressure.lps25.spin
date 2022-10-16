@@ -5,7 +5,7 @@
     Description: Driver for the ST LPS25 Barometric Pressure sensor
     Copyright (c) 2022
     Started Jun 22, 2021
-    Updated Sep 28, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -49,9 +49,9 @@ OBJ
 #ifdef LPS25_SPI
 { decide: Bytecode SPI engine, or PASM? Default is PASM if BC isn't specified }
 #ifdef LPS25_SPI_BC
-    spi : "com.spi.nocog"                       ' BC SPI engine
+    spi : "com.spi.25khz.nocog"                       ' BC SPI engine
 #else
-    spi : "com.spi.4w"                          ' PASM SPI engine
+    spi : "com.spi.1mhz"                          ' PASM SPI engine
 #endif
 #else
 { no, not SPI - default to I2C }
@@ -100,9 +100,9 @@ PUB startx(CS_PIN, SPC_PIN, SDI_PIN, SDO_PIN): status
         if (status := SPI.init(SPC_PIN, SDI_PIN, SDO_PIN, core#SPI_MODE))
             time.usleep(core#T_POR)             ' wait for device startup
             if (SDI_PIN == SDO_PIN)
-                spimode(3)
+                spi_mode(3)
             else
-                spimode(4)
+                spi_mode(4)
             if (dev_id{} == core#DEVID_RESP)    ' validate device
                 return
     ' if this point is reached, something above failed

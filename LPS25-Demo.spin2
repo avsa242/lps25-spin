@@ -6,7 +6,7 @@
         * Pressure data output
     Copyright (c) 2022
     Started Sep 28, 2021
-    Updated Jul 20, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 
@@ -40,8 +40,8 @@ CON
 
 OBJ
 
-    cfg:    "core.con.boardcfg.p2eval"
-    sensr:  "sensor.pressure.lps25"
+    cfg:    "boardcfg.p2eval"
+    sensor:  "sensor.pressure.lps25"
     ser:    "com.serial.terminal.ansi"
 
 PUB setup()
@@ -52,16 +52,16 @@ PUB setup()
     ser.strln(@"Serial terminal started")
 
 #ifdef LPS25_SPI
-    if (sensr.startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_FREQ))
+    if (sensor.startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_FREQ))
 #else
-    if (sensr.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
+    if (sensor.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
 #endif
         ser.strln(@"LPS25 driver started")
     else
         ser.strln(@"LPS25 driver failed to start - halting")
         repeat
 
-    sensr.preset_active()                       ' set defaults, but enable
+    sensor.preset_active()                       ' set defaults, but enable
                                                 '   sensor power
     demo()
 
