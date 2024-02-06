@@ -32,6 +32,7 @@ CON
 
     { /// }
 
+    INT_PIN         = 4
 
     SLAVE_WR        = core.SLAVE_ADDR
     SLAVE_RD        = core.SLAVE_ADDR|1
