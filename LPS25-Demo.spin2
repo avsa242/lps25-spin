@@ -1,12 +1,12 @@
 {
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
     Filename:       LPS25-Demo.spin2
     Description:    LPS25 driver demo (pressure, temperature data output)
     Author:         Jesse Burt
     Started:        Jun 22, 2021
     Updated:        Feb 6, 2024
     Copyright (c) 2024 - See end of file for terms of use.
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
     NOTE: The driver defaults to an I2C connection, if nothing is explicitly specified
         when building.
@@ -32,6 +32,7 @@ OBJ
 '   the driver will attempt to start in 3-wire SPI mode.
 '   SCK=SPC, MOSI=SDI, MISO=SDO
 
+
 PUB setup()
 
     ser.start()
@@ -44,11 +45,11 @@ PUB setup()
         ser.strln(@"LPS25 driver failed to start - halting")
         repeat
 
-    sensor.preset_active()                       ' set defaults, but enable
+    sensor.preset_active()                      ' set defaults, but enable
                                                 '   sensor power
     demo()
 
-#include "pressdemo.common.spin2h"              ' code common to all pressure demos
+#include "pressdemo.common.spin2h"              ' use code common to all pressure demos
 
 
 DAT

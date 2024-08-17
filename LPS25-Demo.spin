@@ -1,12 +1,12 @@
 {
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
     Filename:       LPS25-Demo.spin
     Description:    LPS25 driver demo (pressure, temperature data output)
     Author:         Jesse Burt
     Started:        Jun 22, 2021
     Updated:        Feb 6, 2024
     Copyright (c) 2024 - See end of file for terms of use.
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
     NOTE: The driver defaults to an I2C connection (PASM-based), if nothing is explicitly specified
         when building.
@@ -17,7 +17,6 @@
 '#pragma exportdef(LPS25_SPI)
 
 ' Uncomment the two lines below to use an SPI-connected device (bytecode/cogless SPI engine)
-'   NOTE: LPS25_SPI above must also be uncommented to enable this.
 '#define LPS25_SPI_BC
 '#pragma exportdef(LPS25_SPI_BC)
 
@@ -27,20 +26,21 @@
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkmode    = cfg._clkmode
+    _xinfreq    = cfg._xinfreq
 
 
 OBJ
 
     cfg:    "boardcfg.flip"
+    time:   "time"
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
     sensor: "sensor.pressure.lps25" | {I2C} SCL=28, SDA=29, I2C_FREQ=100_000, I2C_ADDR=0, ...
                                         {SPI} CS=16, SCK=17, MOSI=18, MISO=18
-    time:   "time"
 '   NOTE: If LPS25_SPI is #defined, and MOSI_PIN and MISO_PIN are the same,
 '   the driver will attempt to start in 3-wire SPI mode.
 '   SCK=SPC, MOSI=SDI, MISO=SDO
+
 
 PUB setup()
 
@@ -55,11 +55,11 @@ PUB setup()
         ser.strln(@"LPS25 driver failed to start - halting")
         repeat
 
-    sensor.preset_active()                       ' set defaults, but enable
+    sensor.preset_active()                      ' set defaults, but enable
                                                 '   sensor power
     demo()
 
-#include "pressdemo.common.spinh"               ' code common to all pressure demos
+#include "pressdemo.common.spinh"               ' use code common to all pressure demos
 
 
 DAT
