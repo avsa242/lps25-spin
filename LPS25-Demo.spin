@@ -4,8 +4,8 @@
     Description:    LPS25 driver demo (pressure, temperature data output)
     Author:         Jesse Burt
     Started:        Jun 22, 2021
-    Updated:        Feb 6, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Oct 6, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 
     NOTE: The driver defaults to an I2C connection (PASM-based), if nothing is explicitly specified
@@ -26,20 +26,46 @@
 
 CON
 
-    _clkmode    = cfg._clkmode
-    _xinfreq    = cfg._xinfreq
+    _clkmode    = xtal1+pll16x
+    _xinfreq    = 5_000_000
 
 
 OBJ
 
-    cfg:    "boardcfg.flip"
-    time:   "time"
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
     sensor: "sensor.pressure.lps25" | {I2C} SCL=28, SDA=29, I2C_FREQ=100_000, I2C_ADDR=0, ...
                                         {SPI} CS=16, SCK=17, MOSI=18, MISO=18
 '   NOTE: If LPS25_SPI is #defined, and MOSI_PIN and MISO_PIN are the same,
 '   the driver will attempt to start in 3-wire SPI mode.
 '   SCK=SPC, MOSI=SDI, MISO=SDO
+    time:   "time"
+
+
+PUB main()
+
+    setup()
+    sensor.preset_active()                      ' set defaults, but enable sensor power
+
+    repeat
+        repeat
+        until sensor.press_data_rdy()
+        ser.pos_xy(0, 3)
+        show_press_data()
+        show_temp_data()
+        time.msleep(250)
+
+
+PUB show_press_data() | press
+' Display presserature sensor data
+    press := sensor.press_pascals()
+    ser.printf(@"Press (hPa/mbar): %4.4d.%02.2d\n\r", (press / 1000), abs(press // 1000) )
+
+
+PUB show_temp_data() | temp, tscl
+' Display temperature sensor data
+    temp := sensor.temperature()
+    tscl := lookupz(sensor.temp_scale(): "C", "F", "K")
+    ser.printf(@"Temperature: %3.3d.%02.2d%c\n\r", (temp / 100), abs(temp // 100), tscl )
 
 
 PUB setup()
@@ -55,16 +81,11 @@ PUB setup()
         ser.strln(@"LPS25 driver failed to start - halting")
         repeat
 
-    sensor.preset_active()                      ' set defaults, but enable
-                                                '   sensor power
-    demo()
-
-#include "pressdemo.common.spinh"               ' use code common to all pressure demos
 
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
