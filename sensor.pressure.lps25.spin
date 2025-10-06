@@ -25,10 +25,10 @@ CON
     { /// default I/O settings; these can be overridden in the parent object }
 
     { I2C }
-    SCL             = DEF_SCL
-    SDA             = DEF_SDA
-    I2C_FREQ        = DEF_HZ
-    I2C_ADDR        = DEF_ADDR
+    SCL             = 28
+    SDA             = 29
+    I2C_FREQ        = 100_000
+    I2C_ADDR        = 0
 
     { SPI }
     CS              = 0
@@ -42,12 +42,6 @@ CON
 
     SLAVE_WR        = core.SLAVE_ADDR
     SLAVE_RD        = core.SLAVE_ADDR|1
-
-    DEF_SCL         = 28
-    DEF_SDA         = 29
-    DEF_HZ          = 100_000
-    DEF_ADDR        = 0
-    I2C_MAX_FREQ    = core.I2C_MAX_FREQ
 
 ' Operating modes
     SINGLE          = 0
