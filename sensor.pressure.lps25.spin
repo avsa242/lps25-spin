@@ -4,8 +4,8 @@
     Description:    Driver for the ST LPS25 Barometric Pressure sensor
     Author:         Jesse Burt
     Started:        Jun 22, 2021
-    Updated:        Aug 17, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Oct 6, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -206,11 +206,10 @@ PUB fifo_ena(state=-2): curr_state
 ' Enable FIFO
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := 0
     curr_state := readreg(core.CTRL_REG2)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := ||(state) << core.FIFO_EN
+            state := abs(state) << core.FIFO_EN
             state := ((curr_state & core.FIFO_EN_MASK) | state)
             writereg(core.CTRL_REG2, state)
         other:
@@ -334,6 +333,7 @@ PUB fifo_nr_unread(): nr_samples | isempty
     else                                        ' otherwise
         return (nr_samples + 1)                 '  nr_samples = FSS+1
 
+
 PUB int_polarity(state=-2): curr_state
 ' Set interrupt active state/polarity
 '   Valid values:
@@ -398,9 +398,9 @@ PUB int_ena(state=-2): curr_state
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
     curr_state := readreg(core.CTRL_REG1)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := ||(state) << core.DIFF_EN
+            state := abs(state) << core.DIFF_EN
             state := ((curr_state & core.DIFF_EN_MASK) | state)
             writereg(core.CTRL_REG1, state)
         other:
@@ -413,19 +413,18 @@ PUB int_latch_ena(state=-2): curr_state
 '       FALSE (0): interrupt clears when condition is no longer met
 '       TRUE (-1, 1): interrupt clears only when state is read with interrupt()
     curr_state := readreg(core.INTERRUPT_CFG)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := ||(state) << core.LIR
+            state := abs(state) << core.LIR
             state := ((curr_state & core.LIR_MASK) | state)
             writereg(core.INTERRUPT_CFG, state)
         other:
             return (((curr_state >> core.LIR) & 1) == 1)
 
 
-PUB measure() | tmp
+PUB measure()
 ' Perform measurement
-    tmp := core.MEASURE
-    writereg(core.CTRL_REG2, tmp)
+    writereg(core.CTRL_REG2, core.MEASURE)
 
 
 PUB opmode(mode=-2): curr_mode
@@ -443,7 +442,7 @@ PUB opmode(mode=-2): curr_mode
         CONT:
             press_data_rate(1)
         other:
-            return ||(press_data_rate() <> 0)
+            return abs(press_data_rate() <> 0)
 
 
 PUB powered(state=-2): curr_state
@@ -451,9 +450,9 @@ PUB powered(state=-2): curr_state
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
     curr_state := readreg(core.CTRL_REG1)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := ||(state) << core.PD
+            state := abs(state) << core.PD
             state := ((curr_state & core.PD_MASK) | state)
             writereg(core.CTRL_REG1, state)
         other:
@@ -609,9 +608,9 @@ PRI blk_data_upd(state): curr_state
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
     curr_state := readreg(core.CTRL_REG1)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := ||(state) << core.BDU
+            state := abs(state) << core.BDU
             state := ((curr_state & core.BDU_MASK) | state)
             writereg(core.CTRL_REG1, state)
         other:
@@ -700,7 +699,7 @@ PRI writereg(reg_nr, val, len=1) | cmd_pkt
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
